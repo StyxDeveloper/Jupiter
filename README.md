@@ -9,14 +9,14 @@ Jupiter allows everyone to make a Pull Request! This provides an opportunity for
 
 
 # How Do I Use The Script
-Use The Loader 
+Paste this in your executor of choice! 
 ```lua
 local Games = { -- Game | PlaceId | Link
-    {"Flight Simulator", 3376584594, ""},
-    {"Gods Of Glory", 5665787539, ""},
-    {"Destruction Simulator", 2248408710, ""},
-    {"Tapping Simulator", 9498006165, ""},
-    {"Legends Of Speed", 3101667897, ""}
+    {"Flight Simulator", 3376584594, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Flight%20Simulator/Script.lua"},
+    {"Gods Of Glory", 5665787539, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Gods%20Of%20Glory/Script.lua"},
+    {"Destruction Simulator", 2248408710, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Tapping%20Simulator/Script.lua"},
+    {"Tapping Simulator", 9498006165, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Tapping%20Simulator/Script.lua"},
+    {"Legends Of Speed", 3101667897, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Legend%20Of%20Speed/Script.lua"}
 }
 
 function InitializeScript(PlaceID)
@@ -40,8 +40,8 @@ InitializeScript(game.PlaceId)
 
 # What Games Are Supported
 
-Flight Simulator
-Gods Of Glory
-Destruction Simulator
-Tapping Simulator
-Legends Of Speed
+Flight Simulator : https://www.roblox.com/games/3376584594/Flight-Simulator
+Gods Of Glory : https://www.roblox.com/games/5665787539/Gods-Of-Glory
+Destruction Simulator : https://www.roblox.com/games/2248408710/Destruction-Simulator
+Tapping Simulator : https://www.roblox.com/games/9498006165/Tapping-Simulator
+Legends Of Speed : https://www.roblox.com/games/3101667897/Legends-Of-Speed
