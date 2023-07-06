@@ -21,23 +21,22 @@ local Games = { -- Game | PlaceId | Link
     {"Legends Of Speed", 3101667897, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Legend%20Of%20Speed/Script.lua"}
 }
 
-function InitializeScript(PlaceID)
-    for i, game in ipairs(Games) do
-        if game[2] == PlaceID then
-            local scriptLink = game[3]
-            local success, errorMessage = pcall(function()
+for i, game in ipairs(Games) do
+    if game[2] == game.PlaceId then
+        local scriptLink = game[3]
+        local success, errorMessage =
+            pcall(
+            function()
                 loadstring(game:HttpGet(scriptLink))()
-            end)
-            if not success then
-                warn("Failed to load script for " .. game[1] .. " : " .. errorMessage)
             end
-        else
-            warn("Game is not found in the Script-Hub if you want this game supported leave us suggestions")
+        )
+        if not success then
+            warn("Failed to load script for " .. game[1] .. " : " .. errorMessage)
         end
+    else
+        warn("Game is not found in the Script-Hub if you want this game supported leave us suggestions")
     end
 end
-
-InitializeScript(game.PlaceId)
 ```
 
 # What Games Are Supported
