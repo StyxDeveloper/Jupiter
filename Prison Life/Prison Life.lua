@@ -1,8 +1,11 @@
+-- Still a broken build, please respect that this script was released for learning purposes. Also, you can finish this and use it, if you fix this and create a pull request you can add your name to the Contributors list. 
+-- I likely will not be continuing development on this script so have fun with whatever you gain from it.
+
 --[[
     Contributors
 
     JJSploit On Top -- Main Developer and Founder
-    Lolegic -- Main Developer and Co Founder
+    Lolegic -- Main Developer and Co-Founder
     Che -- UI Developer and Checking The Script
     Atari -- Checked The Script
     ChatGPT -- Better methods for different things within this script
@@ -1188,3 +1191,4 @@ OnClientEvent:Connect(function(Chatted)
         end
     end
 end)
+
