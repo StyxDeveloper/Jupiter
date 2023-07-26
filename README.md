@@ -19,7 +19,7 @@ local Games = { -- Game | PlaceId | Link
     {"Destruction Simulator", 2248408710, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Tapping%20Simulator/Script.lua"},
     {"Tapping Simulator", 9498006165, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Tapping%20Simulator/Script.lua"},
     {"Legends Of Speed", 3101667897, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Legend%20Of%20Speed/Script.lua"},
-    {"Prison Life"}, 155615604, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Prison%20Life/Prison%20Life.lua"}
+    {"Prison Life", 155615604, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Prison%20Life/Prison%20Life.lua"}
 }
 
 for i, game in ipairs(Games) do
