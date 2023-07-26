@@ -13,7 +13,7 @@ Jupiter allows everyone to make a Pull Request! This provides an opportunity for
 # How Do I Use The Script
 Paste this in your executor of choice! 
 ```lua
-local Games = { -- Game | PlaceId | Link
+local Games = {-- Game | PlaceId | Link
     {"Flight Simulator", 3376584594, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Flight%20Simulator/Script.lua"},
     {"Gods Of Glory", 5665787539, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Gods%20Of%20Glory/Script.lua"},
     {"Destruction Simulator", 2248408710, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Tapping%20Simulator/Script.lua"},
@@ -22,20 +22,19 @@ local Games = { -- Game | PlaceId | Link
     {"Prison Life", 155615604, "https://raw.githubusercontent.com/JJSploitOnTop/Jupiter/main/Prison%20Life/Prison%20Life.lua"}
 }
 
-for i, game in ipairs(Games) do
-    if game[2] == game.PlaceId then
-        local scriptLink = game[3]
-        local success, errorMessage =
-            pcall(
-            function()
-                loadstring(game:HttpGet(scriptLink))()
-            end
-        )
-        if not success then
-            warn("Failed to load script for " .. game[1] .. " : " .. errorMessage)
+for i, Game in ipairs(Games) do
+    if game.PlaceId == Game[2] then
+        local ScriptLink = Game[3]
+        local Success, ErrorMessage =
+            pcall(function()
+                loadstring(game:HttpGet(ScriptLink))()
+            end)
+        if not Success then
+            warn("Failed to load script for " .. Game[1] .. " : " .. ErrorMessage)
         end
-    else
-        warn("Game is not found in the Script-Hub if you want this game supported leave us suggestions")
+        break
+    elseif i == #Games then
+        warn("Game is not found in the Script-Hub. If you want this game supported, please leave us suggestions.")
     end
 end
 ```
