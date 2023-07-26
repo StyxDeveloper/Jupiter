@@ -1,15 +1,4 @@
--- Still a broken build, please respect that this script was released for learning purposes. Also, you can finish this and use it, if you fix this and create a pull request you can add your name to the Contributors list. 
--- I likely will not be continuing development on this script so have fun with whatever you gain from it.
-
---[[
-    Contributors
-
-    JJSploit On Top -- Main Developer and Founder
-    Lolegic -- Main Developer and Co-Founder
-    Che -- UI Developer and Checking The Script
-    Atari -- Checked The Script
-    ChatGPT -- Better methods for different things within this script
-]]
+--// Should Hopefully Somewhat Work :thumbsup:
 
 --// Wait until game is loaded
 while not game.Loaded do
@@ -33,7 +22,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local HeartBeat = RunService.Heartbeat
 local CharacterAdded = LocalPlayer.CharacterAdded
-local Remote = workspace.Remote
+local Remote = Workspace.Remote
 local ShootEvent = ReplicatedStorage:FindFirstChild("ShootEvent")
 local StarterPlayer = game:GetService("StarterPlayer")
 local ClientInputHandler = StarterPlayer.StarterCharacterScripts.ClientInputHandler
@@ -41,13 +30,10 @@ local TazePlayer = Remote.tazePlayer
 local ChatSystem = ReplicatedStorage.DefaultChatSystemChatEvents
 local MessageDoneFiltering = ChatSystem.OnMessageDoneFiltering
 local OnClientEvent = MessageDoneFiltering.OnClientEvent
+local StartTime = os.clock()
 
 --// Tables
 local Settings = {
-    PrisonLifeOwnerOnlySettings = {
-        UseNewName = false,
-        OriginalName = LocalPlayer.Name
-    },
     JumpPowerSettings = {
         Number = nil,
         Active = false
@@ -70,12 +56,8 @@ local Settings = {
         OpenAllDoors = false,
         studs = 20
     },
-    AntiCrimSettings = {
-        AntiCriminal = false
-    },
     AntiBringSettings = {
         AntiBring = false,
-        GodDetection = false,
         MagnitudeCheck = false,
         Studs = 6
     },
@@ -114,9 +96,9 @@ local Settings = {
 
 local Others = {
     GunOrder = {
-        "ShotGun",
-        "M9",
-        "AK"
+        "shotgunun",
+        "m9",
+        "ak"
     },
     Teleports = {
         nex = CFrame.new(888, 100, 2388),
@@ -155,29 +137,24 @@ local Others = {
     Ranked = {}
 }
 
+--// ItemHandler
+local Tools = {
+    m4a1 = Workspace.Prison_ITEMS.giver.M4A1,
+    shotgun = Workspace.Prison_ITEMS.giver["Remington 870"],
+    ak = Workspace.Prison_ITEMS.giver["AK-47"],
+    m9 = Workspace.Prison_ITEMS.giver["M9"],
+    hammer = Workspace.Prison_ITEMS.single.Hammer,
+}
+
+
 --// Custom Teleports File
---[[
-if readfile("JupitersCustomTeleports.txt") then
+if isfile("JupitersCustomTeleports.txt") then
     Others.JupitersCustomTeleports = loadstring(readfile("JupitersCustomTeleports.txt"))()
 else
     Others.JupitersCustomTeleports = {}
 end
-]]
---// Make sure firetouchinterest is a thing
-assert(firetouchinterest, "No firetouchinterest")
 
 --// Functions
-
---// View Player
-function ViewPlayer(Player, Unview)
-    if Player and Player:IsA("Player") then
-        LocalPlayer.Camera.Subject = Player.Character
-    elseif Unview and type(Unview) == "boolean" then
-        LocalPlayer.Camera.Subject = Character
-    else
-        warn("Invalid input parameter")
-    end
-end
 
 --// WalkSpeed
 function WalkSpeed(Number)
@@ -189,26 +166,38 @@ function WalkSpeed(Number)
         warn("Walk speed must be above 0.")
         return
     end
-    Character.WalkSpeed = Number
+    Humanoid.WalkSpeed = Number
 end
 
 --// TeamEvent
 function TeamEvent(Team)
     local TeamEventRemote = Remote.TeamEvent
-    if Team == "Inmates" then
+    local OriginalCFrame = nil
+    if Character:FindFirstChild("Head") then
+        OriginalCFrame = Character.Head.CFrame
+    else
+        OriginalCFrame = Character:FindFirstChildWhichIsA("Part") or Character:FindFirstChildWhichIsA("BasePart")
+    end
+    if Team == "inmates" then
         TeamEventRemote:FireServer("Bright orange")
-    elseif Team == "Criminals" then
-        local localPlayerTorso = LocalPlayer.Character:WaitForChild("Torso")
-        local CrimPads = Workspace["Criminals Spawn"].SpawnLocation
-        firetouchinterest(localPlayerTorso, CrimPads, 0)
-        firetouchinterest(localPlayerTorso, CrimPads, 1)
-    elseif Team == "Bright blue" then
-        while #game.Teams.Guards:GetPlayers() >= 8 do
-            task.wait()
+        wait(1)
+        Character:SetPrimaryPartCFrame(OriginalCFrame)
+        elseif Team == "criminals" or Team == "crim" then
+            local CrimPads = Workspace["Criminals Spawn"]:FindFirstChild("SpawnLocation")
+            Character:SetPrimaryPartCFrame(CrimPads.CFrame)
+            task.wait(0.2)
+            Character:SetPrimaryPartCFrame(OriginalCFrame)
+        elseif Team == "guards" then
+        while #game.Teams.Guards:GetPlayers() == 8 do
+            wait(1)
         end
         TeamEventRemote:FireServer("Bright blue")
-    elseif Team == "Neutral" then
+        wait(1)
+        Character:SetPrimaryPartCFrame(OriginalCFrame)
+    elseif Team == "neutral" then
         TeamEventRemote:FireServer("Medium stone grey")
+        wait(1)
+        Character:SetPrimaryPartCFrame(OriginalCFrame)
     else
         return "Invalid team: " .. tostring(Team)
     end
@@ -239,24 +228,6 @@ function AutoFire()
     end
 end
 
---// GainOwnerPerk
-function GainOwnerPerk()
-    local NewName = "Aesthetical"
-    Settings.PrisonLifeOwnerOnlySettings.UseNewName = not Settings.PrisonLifeOwnerOnlySettings.UseNewName
-    if Settings.PrisonLifeOwnerOnlySettings.UseNewName then
-        LocalPlayer.Name = NewName
-    else
-        LocalPlayer.Name = Settings.PrisonLifeOwnerOnlySettings.OriginalName
-    end
-end
-
---// GiveGuns
-function GiveGuns()
-    for _, Gun in pairs(Others.GunOrder) do
-        ItemHandler(Gun)
-    end
-end
-
 --// NewGunOrder
 function NewGunOrder(Gun1, Gun2, Gun3, Gun4)
     if game:GetService("MarketplaceService"):UserOwnsGamePassAsync(LocalPlayer.UserId, 96651) then
@@ -269,21 +240,13 @@ function NewGunOrder(Gun1, Gun2, Gun3, Gun4)
     end
 end
 
---// ItemHandler
-local Tools = {
-    m4a1 = workspace.Prison_ITEMS.giver.M4A1.ITEMPICKUP,
-    shotgun = workspace.Prison_ITEMS.giver["Remington 870"].ITEMPICKUP,
-    ak = workspace.Prison_ITEMS.giver["AK-47"].ITEMPICKUP,
-    m9 = workspace.Prison_ITEMS.giver["M9"].ITEMPICKUP,
-    hammer = workspace.Prison_ITEMS.single.Hammer.ITEMPICKUP,
-}
 
 function ItemHandler(Tool)
     local function GetTool()
         for Name, item in pairs(Tools) do
             if Name == Tool then
                 task.wait(0.2)
-                Remote.ItemHandler:InvokeServer(Character.PrimaryPart.CFrame.Position, item and true)
+                Remote.ItemHandler:InvokeServer({Position = Character.PrimaryPart.CFrame.Position, Parent = item})
             end
         end
     end
@@ -299,52 +262,20 @@ end
 
 --// JumpPower
 function JumpPower(Number)
-    Character.JumpPower = Number
+    Humanoid.JumpPower = Number
 end
 
 --// MeleeKill
 function MeleeKill(Player)
-    if not Player or not Players:FindFirstChild(Player) or Player == LocalPlayer then
-        return "Player not in game or check if it's spelled right"
-    end
     if Player and Player.Character then
         local PrimaryPartCFrame = Character:GetPrimaryPartCFrame()
         Character:SetPrimaryPartCFrame(Player.Character:GetPrimaryPartCFrame())
-        wait(0.1)
+        task.wait(.4)
         for i = 1, 20 do
-            ReplicatedStorage.meleeEvent:FireServer(Player)
+            ReplicatedStorage.meleeEvent:FireServer(Players:FindFirstChild(Player))
         end
         Character:SetPrimaryPartCFrame(PrimaryPartCFrame)
         return "Successfully Killed Player"
-    end
-end
-
---// OpenGate
-function OpenGate()
-    Remote.ItemHandler:InvokeServer(workspace.Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"])
-end
-
---// Rejoin
-function Rejoin()
-    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
-end
-
---// ServerHop
-function ServerHop()
-    local Success, errorMsg = pcall(function()
-        game:GetService("TeleportService"):Teleport(game.PlaceId, math.random())
-    end)
-    if not Success then
-        game:GetService("TeleportService"):Teleport(game.PlaceId, math.random())
-    end
-end
-
---// Sit
-function Sit(Toggle)
-    if type(Toggle) == "boolean" then
-        Humanoid.Sit = Toggle
-    else
-        warn("Incorrect usage, not a boolean")
     end
 end
 
@@ -358,107 +289,12 @@ end
 
 --// Teleport
 function Teleport(Player, Position, Time)
-    if Player == LocalPlayer then
-        Character:SetPrimaryPartCFrame(Position)
-        return "Brought LocalPlayer"
-    end
-    local TeamEvent = Remote.TeamEvent
-    local TeleportWaitTime
-    local OldPosition
-    local OldTeam = LocalPlayer.TeamColor.Name
-    local Handcuffs = Character:FindFirstChild("Handcuffs")
-    if Character:FindFirstChild("Head") then
-        OldPosition = Character.Head.CFrame
-    else
-        OldPosition = Character:FindFirstChildWhichIsA("Part") or Character:FindFirstChildWhichIsA("BasePart")
-    end
-    if type(Time) == "number" then
-        TeleportWaitTime = Time
-    else
-        TeleportWaitTime = 0.04
-    end
-    if OldTeam ~= "Bright blue" or Humanoid.Health == 0 then
-        TeamEvent:FireServer("Bright blue")
-        LocalPlayer.CharacterAppearanceLoaded:Wait()
-    end
-    Character:SetPrimaryPartCFrame(Position)
-    BreakHum()
-    task.wait(TeleportWaitTime)
-    Character.Head.Anchored = true
-    if Backpack:FindFirstChild("Handcuffs") then
-        Backpack:FindFirstChild("Handcuffs").Parent = Character
-        Handcuffs = Character:FindFirstChild("Handcuffs")
-    elseif Character:FindFirstChild("Handcuffs") then
-        Handcuffs = Character:FindFirstChild("Handcuffs")
-    end
-    if Handcuffs then
-        firetouchinterest(Handcuffs.Handle, Player.Character.Torso, 0)
-        Player.Character:SetPrimaryPartCFrame(Position)
-        Handcuffs.Handle.CFrame = Position
-    end
-    while task.wait(TeleportWaitTime) do
-        if Handcuffs then
-            firetouchinterest(Handcuffs.Handle, Player.Character.Torso, 0)
-            Player.Character:SetPrimaryPartCFrame(Position)
-            Handcuffs.Handle.CFrame = Position
-        end
-        if not Handcuffs and Player.Character:FindFirstChild("Handcuffs") then
-            Character:SetPrimaryPartCFrame(Position)
-            Player.Character:FindFirstChild("Handcuffs").Handle.CFrame = Position
-            break
-        end
-    end
-    TeamEvent:FireServer(OldTeam)
-    LocalPlayer.CharacterAppearanceLoaded:Wait()
-    Character:SetPrimaryPartCFrame(OldPosition)
-    return true
+    -- Will return later down the line
 end
 
 --// Criminal
 function Criminal(Player)
-    local OldTeam = LocalPlayer.TeamColor.Name
-    local Handcuffs
-    local Position = Character.PrimaryPart.CFrame
-
-    if OldTeam ~= "Bright blue" or Humanoid.Health == 0 then
-        TeamEvent:FireServer("Bright blue")
-        LocalPlayer.CharacterAppearanceLoaded:Wait()
-    end
-
-    BreakHum()
-
-    if Backpack:FindFirstChild("Handcuffs") then
-        Backpack:FindFirstChild("Handcuffs").Parent = Character
-        Handcuffs = Character:FindFirstChild("Handcuffs")
-    elseif Character:FindFirstChild("Handcuffs") then
-        Handcuffs = Character:FindFirstChild("Handcuffs")
-    end
-
-    if Handcuffs then
-        firetouchinterest(Handcuffs.Handle, Player.Character.Torso, 0)
-        Player.Character:SetPrimaryPartCFrame(Position)
-        Handcuffs.Handle.CFrame = Position
-    end
-
-    while task.wait() do
-        if Handcuffs then
-            local CrimPads = Workspace["Criminals Spawn"].SpawnLocation
-            firetouchinterest(Player.Character.Torso, CrimPads, 0)
-            firetouchinterest(Player.Character.Torso, CrimPads, 1)
-        else
-            break
-        end
-    end
-end
-
---// FPSBoost
-function FPSBoost()
-    local Textures = workspace:GetDescendants()
-    for i, Texture in ipairs(Textures) do
-        if Texture:IsA("Texture") then
-            Texture.Transparency = Texture.Transparency ~= 1 and 1 or 0
-        end
-    end
+    -- Will return later
 end
 
 --// AddCustomTeleport
@@ -544,8 +380,8 @@ end
 
 --// Kill
 function Kill(Player)
-    if Settings.KillSettings.KillEvent == "MeleeEvent" then
-        MeleeKill(Player)
+    if Settings.KillSettings.KillEvent == "MeleeKill" then
+        print(MeleeKill(Player))
     elseif Settings.KillSettings.KillEvent == "GunKill" then
         ShootEvent(Player)
     end
@@ -569,7 +405,7 @@ end
 function GetPlayer(Name)
     local InGamePlayers = Players:GetPlayers()
     for _, Player in ipairs(InGamePlayers) do
-        if Player.Name:lower():sub(1, #Name) == Name:lower() or Player.DisplayName:lower():sub(1, #Name) == Name:lower() then
+        if Player.Name:lower():sub(1, #Name) == Name:lower() or Player.DisplayName:lower():sub(1, #Name) == Name:lower() then -- Needs to be fixed?
             return Player
         end
     end
@@ -585,15 +421,16 @@ CharacterAdded:Connect(function(character)
     --// AutoRespawn
     Hum.Died:Connect(function()
         if Settings.AutoRespawnSettings.AutoRespawn then
-            local Player = game.Players.LocalPlayer
-            local OldColor = Player.TeamColor.Name
-            local OldCameraCFrame = workspace.CurrentCamera.CFrame
+            local OldColor = LocalPlayer.TeamColor.Name
+            local OldCameraCFrame = Workspace.CurrentCamera.CFrame
             local LastCFrame = character:GetPrimaryPartCFrame()
             TeamEvent(OldColor)
-            task.wait(0.3)
-            if Hum.Health <= 0 then
-                Player.character:SetPrimaryPartCFrame(LastCFrame)
-                workspace.CurrentCamera.CFrame = OldCameraCFrame
+            while task.wait() do
+                if Hum.Health > 0 then
+                    LocalPlayer.character:SetPrimaryPartCFrame(LastCFrame)
+                    Workspace.CurrentCamera.CFrame = OldCameraCFrame
+                    break
+                end
             end
         end
     end)
@@ -601,7 +438,9 @@ CharacterAdded:Connect(function(character)
     --// AutoGiveGuns
     Hum.Died:Connect(function()
         if Hum.Health == 100 and Settings.AutoGiveGunsSettings.AutoGiveGuns then
-            GiveGuns()
+            for _, Gun in pairs(Others.GunOrder) do
+                ItemHandler(Gun)
+            end
         end
     end)
 
@@ -652,7 +491,7 @@ HeartBeat:Connect(function()
     end
     
     --// Door Aura
-    for _, Door in pairs(workspace.Doors:GetChildren()) do
+    for _, Door in pairs(Workspace.Doors:GetChildren()) do
         if Door.Name == "door_v3" then
             local Block = Door:FindFirstChild("Block")
             if Block then
@@ -661,39 +500,6 @@ HeartBeat:Connect(function()
                     firetouchinterest(LocalPlayer.Character.Torso, Block.hitbox, 0)
                     firetouchinterest(LocalPlayer.Character.Torso, Block.hitbox, 1)
                 end
-            end
-        end
-    end
-    
-    --// AntiCrim
-    if Settings.AntiCrimSettings.AntiCriminal and LocalPlayer.Team ~= "Guards" and LocalPlayer.Team ~= "Neutral" then
-        if #game.Teams.Guards:GetPlayers() < 8 then
-            TeamEvent("Bright blue")
-        else
-            TeamEvent("Medium stone grey")
-        end
-    end
-    
-    --// AntiBring
-    if Settings.AntiBringSettings.AntiBring then
-        for _, Player in pairs(Players:GetPlayers()) do
-            if not Player.Character or not Player.Character.Humanoid then
-                local possibility = Player
-                if Settings.AntiBringSettings.GodDetection then
-                    if Settings.AntiBringSettings.MagnitudeCheck then
-                        local Character = possibility.Character
-                        if Character and (Character.PrimaryPart.Position - LocalPlayer.Character.PrimaryPart.Position).Magnitude <= Settings.AntiBringSettings.Studs then
-                            BreakHum()
-                        end
-                    else
-                        BreakHum()
-                    end
-                end
-            end
-        end
-        for _, Tool in pairs(LocalPlayer.Character:GetChildren()) do
-            if Tool:IsA("Tool") and Tool.Name == "Handcuffs" then
-                Tool:Destroy()
             end
         end
     end
@@ -756,7 +562,7 @@ HeartBeat:Connect(function()
 
     --// Force Field
     if Settings.ForceFieldSettings.ForceField then
-        local OldPos = Character.Head.CFrame
+        local OldPos = Character.PrimaryPart.CFrame
         Character.Head:Destroy() --// destroys head
         local Head = Character:WaitForChild("Head")
         Head.CFrame = OldPos
@@ -767,21 +573,11 @@ end)
 --// Command Handler + Commands
 
 local Commands = {
-    Test = {
-        Aliases = {"t", "testing", "test"},
-        Func = function()
-            print("Test: Command Handler Is Working!")
-        end
-    },
     Kill = {
         Aliases = {"k", "kill"},
         Func = function(Player)
-            local TargetPlayer = GetPlayer(Player)
-            if TargetPlayer then
-                Kill(TargetPlayer)
-            else
-                warn(Player .. " is not a valid Player. Please try again.")
-            end
+            local TargetPlayer = GetPlayer(Player[2])
+            Kill(TargetPlayer)
         end
     },
     AutoRespawn = {
@@ -793,11 +589,7 @@ local Commands = {
     Gun = {
         Aliases = {"gun"},
         Func = function(Tool)
-            if Tool then
-                ItemHandler(Tool)
-            else
-                warn("Tool has not been found. Please try again with a valid item.")
-            end
+            ItemHandler(Tool[2])
         end
     },
     Hammer = {
@@ -809,35 +601,28 @@ local Commands = {
     WalkSpeed = {
         Aliases = {"ws", "walkspeed"},
         Func = function(Num)
-            WalkSpeed(tonumber(Num))
+            WalkSpeed(tonumber(Num[2]))
         end
     },
     LoopWalkSpeed = {
         Aliases = {"lws", "loopwalkspeed"},
         Func = function(Num)
-            if type(tonumber(Num)) == "number" then
-                Settings.LoopWalkSpeedSettings.DefaultWalkSpeed = Num
-            else
-                Settings.LoopWalkSpeedSettings.LWalkSpeed = not Settings.LoopWalkSpeedSettings.LWalkSpeed
-            end
+            Settings.LoopWalkSpeedSettings.DefaultWalkSpeed = Num[2]
+            Settings.LoopWalkSpeedSettings.LWalkSpeed = not Settings.LoopWalkSpeedSettings.LWalkSpeed
         end
     },
     JumpPower = {
         Aliases = {"jp", "jumppower"},
         Func = function(Num)
-            if type(tonumber(Num)) == "number" then
-                JumpPower(Num)
-            else
-                warn("Not a valid input: " .. Num)
-            end
+            JumpPower(Num[2])
         end
     },
     LoopJumpPower = {
         Aliases = {"ljp", "loopjumppower"},
         Func = function(Num)
-            if type(tonumber(Num)) == "number" then
-                Settings.JumpPowerSettings.Number = Num
-                Settings.JumpPowerSettings.Active = not Settings.JumpPowerSettings.Active
+            if type(tonumber(Num[2])) == "number" then
+                Settings.JumpPowerSettings.Number = Num[2]
+                Settings.JumpPowerSettings.Active = true
             else
                 Settings.JumpPowerSettings.Active = not Settings.JumpPowerSettings.Active
             end
@@ -852,18 +637,12 @@ local Commands = {
     Arrest = {
         Aliases = {"arrest"},
         Func = function(player)
-            local Player = GetPlayer(player)
+            local Player = GetPlayer(player[2])
             if Player then
                 Arrest(Player)
             else
-                warn("Player " .. player .. " is not a valid Player. Please try again.")
+                warn("Player " .. player[2] .. " is not a valid Player. Please try again.")
             end
-        end
-    },
-    OwnerPerk = {
-        Aliases = {"ownerperk"},
-        Func = function()
-            Settings.PrisonLifeOwnerOnlySettings.UseNewName = not Settings.PrisonLifeOwnerOnlySettings.UseNewName
         end
     },
     Auto = {
@@ -873,41 +652,44 @@ local Commands = {
         end
     },
     Sit = {
-        Aliases = {"Sit"},
-        Func = function(Bool)
-            if not Bool then
-                Sit(true)
-            elseif type(Bool) == "boolean" then
-                Sit(Bool)
-            end
+        Aliases = {"sit"},
+        Func = function()
+            Humanoid.Sit = true
         end
     },
     OpenGate = {
         Aliases = {"opengate"},
         Func = function()
-            OpenGate()
+            Remote.ItemHandler:InvokeServer(Workspace.Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"])
         end
     },
     Rejoin = {
-        Aliases = {"rejoin"},
+        Aliases = {"rejoin", "rj"},
         Func = function()
-            Rejoin()
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
         end
     },
     ServerHop = {
         Aliases = {"serverhop"},
         Func = function()
-            ServerHop()
+            local Success, errorMsg = pcall(function()
+                game:GetService("TeleportService"):Teleport(game.PlaceId, math.random())
+            end)
+            if not Success then
+                game:GetService("TeleportService"):Teleport(game.PlaceId, math.random())
+            end
         end
     },
     Guns = {
         Aliases = {"guns"},
         Func = function()
-            GiveGuns()
+            for _, Gun in pairs(Others.GunOrder) do
+                ItemHandler(Gun)
+            end
         end
     },
     GunOrder = {
-        Aliases = {"guns"},
+        Aliases = {"gunorder"},
         Func = function(ARGS)
             NewGunOrder(ARGS[3], ARGS[4], ARGS[5], ARGS[6])
         end
@@ -921,64 +703,65 @@ local Commands = {
     View = {
         Aliases = {"view"},
         Func = function(player)
-            local Player = GetPlayer(player)
-            if Player then
-                ViewPlayer(Player)
-            else
-                warn("Player " .. player .. " is not a valid Player.")
+            local Player = GetPlayer(player[2])
+            if Players:FindFirstChild(Player) then
+                LocalPlayer.Camera.Subject = Player.Character
             end
         end
     },
     Unview = {
         Aliases = {"unview"},
         Func = function()
-            ViewPlayer(nil, true)
+            LocalPlayer.Camera.Subject = Character
         end
     },
     ChangeTeam = {
         Aliases = {"changeteam", "changeteams", "team"},
         Func = function(TeamColor)
-            if TeamColor then
-                TeamEvent(TeamColor)
-            else
-                warn("No team was provided.")
-            end
+            TeamEvent(TeamColor[2])
         end
     },
     Exclude = {
         Aliases = {"exclude"},
         Func = function(player)
-            local Player = GetPlayer(player)
+            local Player = GetPlayer(player[2])
             if Player then
                 AddExclusion(Player)
             else
-                warn("Player " .. player .. " has not been found. Please check spelling.")
+                warn("Player " .. player[2] .. " has not been found. Please check spelling.")
             end
         end
     },
     FpsBoost = {
         Aliases = {"fpsboost"},
         Func = function()
-            FPSBoost()
+            local Textures = Workspace:GetDescendants()
+            for i, Texture in ipairs(Textures) do
+                if Texture:IsA("Texture") then
+                    Texture.Transparency = Texture.Transparency ~= 1 and 1 or 0
+                end
+            end
         end
     },
     DoorAura = {
         Aliases = {"da", "dooraura"},
         Func = function(num)
-            if not num then
+            if not num[2] then
                 Settings.DoorSettings.OpenAllDoors = not Settings.DoorSettings.OpenAllDoors
-            elseif type(tonumber(num)) == "number" then
-                Settings.DoorSettings.OpenAllDoors = not Settings.DoorSettings.OpenAllDoors
-                Settings.DoorSettings.studs = num
+            elseif type(tonumber(num[2])) == "number" then
+                Settings.DoorSettings.OpenAllDoors = true
+                Settings.DoorSettings.studs = num[2]
             end
         end
     },
     killAura = {
         Aliases = {"ka", "aura", "killaura"},
         Func = function(num)
-            Settings.killAuraSettings.killAura = not Settings.killAuraSettings.killAura
-            if type(tonumber(num)) == "number" then
+            if type(tonumber(num[2])) == "number" then
                 Settings.killAuraSettings.studs = num
+                Settings.killAuraSettings.killAura = true
+            else
+                Settings.killAuraSettings.killAura = not Settings.killAuraSettings.killAura
             end
         end
     },
@@ -988,6 +771,7 @@ local Commands = {
             print("Missing function for right now. This will be fixed later.")
         end
     },
+    --[[ Not working anymore
     Bring = {
         Aliases = {"bring"},
         Func = function(ARGS)
@@ -1012,34 +796,14 @@ local Commands = {
             end
         end
     },
-    AntiCrim = {
-        Aliases = {"ac", "anticrim"},
-        Func = function()
-            Settings.AntiCrimSettings.AntiCriminal = not Settings.AntiCrimSettings.AntiCriminal
-        end
-    },
+    ]]
     AntiBring = {
         Aliases = {"ab", "antibring"},
         Func = function()
             Settings.AntiBringSettings.AntiBring = not Settings.AntiBringSettings.AntiBring
         end
     },
-    GodDetection = {
-        Aliases = {"goddetection"},
-        Func = function()
-            Settings.AntiBringSettings.GodDetection = not Settings.AntiBringSettings.GodDetection
-        end
-    },
-    MagnitudeCheck = {
-        Aliases = {"magnitudecheck"},
-        Func = function(num)
-            if not num then
-            Settings.AntiBringSettings.MagnitudeCheck = not Settings.AntiBringSettings.MagnitudeCheck
-            elseif type(tonumber(num)) == "number" then
-                Settings.AntiBringSettings.Studs = num
-            end
-        end
-    },
+    --[[
     Teleport = {
         Aliases = {"teleport"},
         Func = function(ARGS)
@@ -1065,17 +829,8 @@ local Commands = {
             end
         end
     },
-    Void = {
-        Aliases = {"void"},
-        Func = function(player)
-            local Player = GetPlayer(player)
-            if Player then
-                Teleport(Player, Others.Teleports.void)
-            else
-                warn("Player is not correct.")
-            end
-        end
-    },
+    ]]
+
     CopyTeam = {
         Aliases = {"ct", "copyteam"},
         Func = function(player)
@@ -1132,13 +887,28 @@ local Commands = {
     },
     Tase = {
         Aliases = {"tase"},
-        Func = function(player)
-            local Player = GetPlayer(player)
+        Func = function(Args)
+            local Player = GetPlayer(Args[2])
             if Player then
                 Tase(Player)
             else
-                warn("Player " .. player .. " is not a valid Player.")
+                warn("Player " .. Args[2] .. " is not a valid Player.")
             end
+        end
+    },
+    Goto = {
+        Aliases = {"goto", "to"},
+        Func = function(Arg)
+            Character:SetPrimaryPartCFrame(Players:FindFirstChild(GetPlayer(Arg[2])).PrimaryPart.CFrame)
+        end
+    },
+    Respawn = {
+        Aliases = {"re", "respawn"},
+        Func = function()
+            local OriginalCFrame = Character.PrimaryPart.CFrame
+            TeamEvent(LocalPlayer.Team.Name)
+            task.wait(1)
+            Character:SetPrimaryPartCFrame(OriginalCFrame)
         end
     }
 }
@@ -1192,3 +962,4 @@ OnClientEvent:Connect(function(Chatted)
     end
 end)
 
+print("Successfully Loaded in " .. (os.clock() - StartTime) * 1000 .. " ms \n" .. "Contributors\n" .. "JJSploit On Top -- Main Developer and Founder\n" .. "Lolegic -- Main Developer and Co-Founder\n" .. "Che -- UI Developer and Checking The Script\n" .. "Atari -- Checked The Script\n" .. "ChatGPT -- Better methods for different things within this script")
