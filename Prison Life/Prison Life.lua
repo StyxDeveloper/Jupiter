@@ -11,6 +11,8 @@
     ReAdded AntiBring
     ReAdded AntiCrim
     Checks For FireTouchInterest (Creates A Fake FireTouch If User Doesnt Have It To Prevent Errors In The Script Expect Certain Functions To Not Work)
+    Removed GodMode Due To https://create.roblox.com/docs/reference/engine/enums/RejectCharacterDeletions
+    Added ChatLogger
 
 ]] --
 
@@ -18,9 +20,10 @@
 local ContributorsList = {
     {Username = "JJSploit On Top", Importance = "Main Developer and Founder"},
     {Username = "Lolegic", Importance = "Main Developer and Co-Founder"},
-    {Username = "Che", Importance = "UI Developer and Checking The Script"},
-    {Username = "Atari", Importance = "Helping Around With The Script"},
-    {Username = "ChatGPT", Importance = "Better Method For ChatHandler"}
+    {Username = "Che", Importance = "Gave Recommendations"},
+    {Username = "Atari", Importance = "Gave Recommendations"},
+    {Username = "ChatGPT", Importance = "Better Method For ChatHandler"},
+    {Username = "MemoryEditor", Importance = "My Mexican Cartel Worker"}
 }
 
 --// Wait until game is loaded
@@ -110,14 +113,14 @@ local Settings = {
         KillCommands = true,
         BringCommands = true
     },
-    GodModeSettings = {
-        GodModeSettings = false
-    },
     ForceFieldSettings = {
         ForceField = false
     },
     LoopTaseSettings = {
         Delay = 0.03
+    },
+    ChatLoggerSettings = {
+        ChatLogger = false
     }
 }
 
@@ -451,16 +454,8 @@ CharacterAdded:Connect(
                 end
             end
         )
-
-        --// GodMode
-        if Settings.GodModeSettings.GodModeSettings then
-            BreakHum()
-            task.wait(3)
-        end
     end
 )
-
---// HeartBeat:Connect
 
 --// HeartBeat:Connect
 HeartBeat:Connect(
@@ -951,6 +946,18 @@ local Commands = {
             task.wait(1)
             Character:SetPrimaryPartCFrame(OriginalCFrame)
         end
+    },
+    ChatLogger = {
+        Aliases = {"chatlogger", "logchat"},
+        Func = function()
+            Settings.ChatLoggerSettings.ChatLogger = not Settings.ChatLoggerSettings.ChatLogger
+        end
+    },
+    CommandLogger = {
+        Aliases = {"cmdlogger", "logcmds"},
+        Func = function()
+            Settings.ChatLoggerSettings.CommandLogger = not Settings.ChatLoggerSettings.CommandLogger
+        end
     }
 }
 
@@ -987,6 +994,10 @@ OnClientEvent:Connect(
                 end
             end
             return false
+        end
+
+        if Settings.ChatLoggerSettings.ChatLogger == true then
+            print("ChatLogs:\n User: " .. MessageCreator .. "\n Message: " .. table.concat(Messages))
         end
 
         if MessageCreator == LocalPlayer.Name and IsValidCommand(Message) then
