@@ -1,9 +1,32 @@
---// Should Hopefully Somewhat Work :thumbsup:
+--[[
+    Should Work Now
+
+    ChangeLog:
+    Removed Useless Things
+    Made Code Show Better Practices By Swapping Function To Local Function
+    Made Credits List Look Better
+    Fixed View
+    Now Only Uses 2 Naming Conventions (Pascal Casing and LowerCased Camel Casing)
+    Added Prefix Command
+    ReAdded AntiBring
+    ReAdded AntiCrim
+    Checks For FireTouchInterest (Creates A Fake FireTouch If User Doesnt Have It To Prevent Errors In The Script Expect Certain Functions To Not Work)
+
+]] --
+
+--// Contributors
+local ContributorsList = {
+    {Username = "JJSploit On Top", Importance = "Main Developer and Founder"},
+    {Username = "Lolegic", Importance = "Main Developer and Co-Founder"},
+    {Username = "Che", Importance = "UI Developer and Checking The Script"},
+    {Username = "Atari", Importance = "Helping Around With The Script"},
+    {Username = "ChatGPT", Importance = "Better Method For ChatHandler"}
+}
 
 --// Wait until game is loaded
-while not game.Loaded do
+repeat
     task.wait()
-end
+until game.Loaded
 
 --// Check if Jupiter is already running
 assert(not getgenv().IsJupiterLoaded, "Jupiter is already loaded")
@@ -31,6 +54,7 @@ local ChatSystem = ReplicatedStorage.DefaultChatSystemChatEvents
 local MessageDoneFiltering = ChatSystem.OnMessageDoneFiltering
 local OnClientEvent = MessageDoneFiltering.OnClientEvent
 local StartTime = os.clock()
+local StarterGui = game:GetService("StarterGui")
 
 --// Tables
 local Settings = {
@@ -45,21 +69,24 @@ local Settings = {
     AutoGiveGunsSettings = {
         AutoGiveGuns = false
     },
-    killAuraSettings = {
-        killAura = false,
-        studs = 20
+    KillAuraSettings = {
+        KillAura = false,
+        Studs = 20
     },
     NoclipSettings = {
         Noclip = false
     },
     DoorSettings = {
         OpenAllDoors = false,
-        studs = 20
+        Studs = 20
     },
     AntiBringSettings = {
         AntiBring = false,
         MagnitudeCheck = false,
         Studs = 6
+    },
+    AntiCrimSettings = {
+        AntiCrim = false
     },
     AntiVoidSettings = {
         AntiVoid = false
@@ -130,8 +157,6 @@ local Others = {
     },
     Exclusion = {},
     LoopKillPlayers = {},
-    JupitersCustomTeleports = {},
-    SpawnLocationNewCFrame = {},
     LoopBringPlayers = {},
     LoopTasePlayers = {},
     Ranked = {}
@@ -143,21 +168,21 @@ local Tools = {
     shotgun = Workspace.Prison_ITEMS.giver["Remington 870"],
     ak = Workspace.Prison_ITEMS.giver["AK-47"],
     m9 = Workspace.Prison_ITEMS.giver["M9"],
-    hammer = Workspace.Prison_ITEMS.single.Hammer,
+    hammer = Workspace.Prison_ITEMS.single.Hammer
 }
 
-
---// Custom Teleports File
-if isfile("JupitersCustomTeleports.txt") then
-    Others.JupitersCustomTeleports = loadstring(readfile("JupitersCustomTeleports.txt"))()
-else
-    Others.JupitersCustomTeleports = {}
+--// Check For FireTouchInterest
+if not firetouchinterest then
+    print("No firetouchinterest some functions will not work correctly")
+    getgenv().firetouchinterest = function()
+        task.wait()
+    end
 end
 
 --// Functions
 
 --// WalkSpeed
-function WalkSpeed(Number)
+local function WalkSpeed(Number)
     if typeof(Number) ~= "number" then
         warn("Walk speed must be a number.")
         return
@@ -170,7 +195,7 @@ function WalkSpeed(Number)
 end
 
 --// TeamEvent
-function TeamEvent(Team)
+local function TeamEvent(Team)
     local TeamEventRemote = Remote.TeamEvent
     local OriginalCFrame = nil
     if Character:FindFirstChild("Head") then
@@ -182,12 +207,12 @@ function TeamEvent(Team)
         TeamEventRemote:FireServer("Bright orange")
         wait(1)
         Character:SetPrimaryPartCFrame(OriginalCFrame)
-        elseif Team == "criminals" or Team == "crim" then
-            local CrimPads = Workspace["Criminals Spawn"]:FindFirstChild("SpawnLocation")
-            Character:SetPrimaryPartCFrame(CrimPads.CFrame)
-            task.wait(0.2)
-            Character:SetPrimaryPartCFrame(OriginalCFrame)
-        elseif Team == "guards" then
+    elseif Team == "criminals" or Team == "crim" then
+        local CrimPads = Workspace["Criminals Spawn"]:FindFirstChild("SpawnLocation")
+        Character:SetPrimaryPartCFrame(CrimPads.CFrame)
+        task.wait(0.2)
+        Character:SetPrimaryPartCFrame(OriginalCFrame)
+    elseif Team == "guards" then
         while #game.Teams.Guards:GetPlayers() == 8 do
             wait(1)
         end
@@ -204,12 +229,12 @@ function TeamEvent(Team)
 end
 
 --// AddExclusion
-function AddExclusion(Player)
+local function AddExclusion(Player)
     table.insert(Others.Exclusion, Player)
 end
 
 --// Arrest
-function Arrest(Player)
+local function Arrest(Player)
     if Player.Character and Player.Character:FindFirstChild("Head") and LocalPlayer then
         local OldPos = LocalPlayer.Head.CFrame
         LocalPlayer:SetPrimaryPartCFrame(Player.Character.Head.CFrame)
@@ -220,7 +245,7 @@ function Arrest(Player)
 end
 
 --// AutoFire
-function AutoFire()
+local function AutoFire()
     for i, v in next, Backpack:GetChildren() do
         local GunStates = require(Backpack[tostring(v)].GunStates)
         GunStates.AutoFire = true
@@ -229,7 +254,7 @@ function AutoFire()
 end
 
 --// NewGunOrder
-function NewGunOrder(Gun1, Gun2, Gun3, Gun4)
+local function NewGunOrder(Gun1, Gun2, Gun3, Gun4)
     if game:GetService("MarketplaceService"):UserOwnsGamePassAsync(LocalPlayer.UserId, 96651) then
         local Guns = {Gun1, Gun2, Gun3, Gun4}
         for _, v in pairs(Guns) do
@@ -240,8 +265,7 @@ function NewGunOrder(Gun1, Gun2, Gun3, Gun4)
     end
 end
 
-
-function ItemHandler(Tool)
+local function ItemHandler(Tool)
     local function GetTool()
         for Name, item in pairs(Tools) do
             if Name == Tool then
@@ -261,12 +285,12 @@ function ItemHandler(Tool)
 end
 
 --// JumpPower
-function JumpPower(Number)
+local function JumpPower(Number)
     Humanoid.JumpPower = Number
 end
 
 --// MeleeKill
-function MeleeKill(Player)
+local function MeleeKill(Player)
     if Player and Player.Character then
         local PrimaryPartCFrame = Character:GetPrimaryPartCFrame()
         Character:SetPrimaryPartCFrame(Player.Character:GetPrimaryPartCFrame())
@@ -280,7 +304,7 @@ function MeleeKill(Player)
 end
 
 --// BreakHum
-function BreakHum()
+local function BreakHum()
     local clone = Humanoid:Clone()
     Humanoid:Destroy()
     clone.Parent = Character
@@ -288,42 +312,17 @@ function BreakHum()
 end
 
 --// Teleport
-function Teleport(Player, Position, Time)
+local function Teleport(Player, Position, Time)
     -- Will return later down the line
 end
 
 --// Criminal
-function Criminal(Player)
+local function Criminal(Player)
     -- Will return later
 end
 
---// AddCustomTeleport
-function AddCustomTeleport(CFrame, Name)
-    for _, Teleport in ipairs(Others.JupitersCustomTeleports) do
-        if Teleport.Name == Name then
-            return "Teleport with the same Name already exists"
-        elseif Teleport.CFrame == CFrame then
-            return "Teleport with the same CFrame already exists"
-        end
-    end
-
-    table.insert(Others.JupitersCustomTeleports, { CFrame = CFrame, Name = Name })
-
-    local Result = "{"
-    for i, v in ipairs(Others.JupitersCustomTeleports) do
-        if i == 0 then
-            Result = Result .. ","
-        end
-        Result = Result .. "{CFrame = CFrame.new(" .. tostring(v.CFrame) .. "), Name = '" .. v.Name .. "'}"
-    end
-    Result = Result .. "}"
-    writefile("Others.JupitersCustomTeleports.txt", "return " .. Result)
-
-    return "Custom Teleport " .. Name .. " added successfully"
-end
-
 --// ShootEvent
-function ShootEvent(Player)
+local function ShootEvent(Player)
     local Shoot = {
         {
             {
@@ -351,7 +350,7 @@ function ShootEvent(Player)
 end
 
 --// Tase
-function Tase(Player)
+local function Tase(Player)
     local Shoot = {
         {
             {
@@ -379,7 +378,7 @@ function Tase(Player)
 end
 
 --// Kill
-function Kill(Player)
+local function Kill(Player)
     if Settings.KillSettings.KillEvent == "MeleeKill" then
         print(MeleeKill(Player))
     elseif Settings.KillSettings.KillEvent == "GunKill" then
@@ -388,13 +387,17 @@ function Kill(Player)
 end
 
 --// Chat
-function Chat(Player, Message)
+local function Chat(Player, Message)
     ChatSystem.SayMessageRequest:FireServer("/w " .. Player .. " " .. Message, "All")
 end
 
-function CheckRank(Command, Player)
+local function CheckRank(Command, Player)
     if Settings.ExclusionSettings[Command .. "Commands"] then
-        Chat(Player, "You are not allowed to use " .. Command .. " because " .. LocalPlayer.Name .. " has this function disabled!")
+        Chat(
+            Player,
+            "You are not allowed to use " ..
+                Command .. " because " .. LocalPlayer.Name .. " has this local function disabled!"
+        )
         return false
     else
         return true
@@ -402,7 +405,7 @@ function CheckRank(Command, Player)
 end
 
 --// GetPlayer
-function GetPlayer(Name)
+local function GetPlayer(Name)
     local InGamePlayers = Players:GetPlayers()
     for _, Player in ipairs(InGamePlayers) do
         if Player.Name:lower():sub(1, #Name) == Name:lower() or Player.DisplayName:lower():sub(1, #Name) == Name:lower() then -- Needs to be fixed?
@@ -415,164 +418,190 @@ end
 --// Connections
 
 --// CharacterAdded:Connect
-CharacterAdded:Connect(function(character)
-    local Hum = character:WaitForChild("Humanoid")
+CharacterAdded:Connect(
+    function(character)
+        local Hum = character:WaitForChild("Humanoid")
 
-    --// AutoRespawn
-    Hum.Died:Connect(function()
-        if Settings.AutoRespawnSettings.AutoRespawn then
-            local OldColor = LocalPlayer.TeamColor.Name
-            local OldCameraCFrame = Workspace.CurrentCamera.CFrame
-            local LastCFrame = character:GetPrimaryPartCFrame()
-            TeamEvent(OldColor)
-            while task.wait() do
-                if Hum.Health > 0 then
-                    LocalPlayer.character:SetPrimaryPartCFrame(LastCFrame)
-                    Workspace.CurrentCamera.CFrame = OldCameraCFrame
+        --// AutoRespawn
+        Hum.Died:Connect(
+            function()
+                if Settings.AutoRespawnSettings.AutoRespawn then
+                    local OldColor = LocalPlayer.TeamColor.Name
+                    local OldCameraCFrame = Workspace.CurrentCamera.CFrame
+                    local LastCFrame = character:GetPrimaryPartCFrame()
+                    TeamEvent(OldColor)
+                    while task.wait() do
+                        if Hum.Health > 0 then
+                            LocalPlayer.character:SetPrimaryPartCFrame(LastCFrame)
+                            Workspace.CurrentCamera.CFrame = OldCameraCFrame
+                            break
+                        end
+                    end
+                end
+            end
+        )
+
+        --// AutoGiveGuns
+        Hum.Died:Connect(
+            function()
+                if Hum.Health == 100 and Settings.AutoGiveGunsSettings.AutoGiveGuns then
+                    for _, Gun in pairs(Others.GunOrder) do
+                        ItemHandler(Gun)
+                    end
+                end
+            end
+        )
+
+        --// GodMode
+        if Settings.GodModeSettings.GodModeSettings then
+            BreakHum()
+            task.wait(3)
+        end
+    end
+)
+
+--// HeartBeat:Connect
+
+--// HeartBeat:Connect
+HeartBeat:Connect(
+    function()
+        --// Loop Jump Power
+        if Settings.JumpPowerSettings.Active then
+            JumpPower(Settings.JumpPowerSettings.Number)
+        end
+
+        --// Loop Walk Speed
+        if Settings.LoopWalkSpeedSettings.Active then
+            WalkSpeed(Settings.LoopWalkSpeedSettings.LWalkSpeed)
+        end
+
+        --// NoClip
+        if Settings.NoclipSettings.Noclip then
+            for _, Part in ipairs(Character:GetDescendants()) do
+                if Part:IsA("BasePart") or Part:IsA("Part") then
+                    Part.CanCollide = false
+                end
+            end
+        end
+
+        --// Kill Aura
+        if Settings.KillAuraSettings.KillAura then
+            task.wait()
+            for _, Player in pairs(Players:GetChildren()) do
+                local Distance =
+                    (LocalPlayer.Character.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+                if Distance <= Settings.KillAuraSettings.Studs then
+                    Kill(Player.Name)
+                end
+            end
+        end
+
+        --// Door Aura
+        for _, Door in pairs(Workspace.Doors:GetChildren()) do
+            if Door.Name == "door_v3" then
+                local Block = Door:FindFirstChild("Block")
+                if Block then
+                    local Distance = (Block.hitbox.Position - LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+                    if Distance <= Settings.DoorSettings.Studs then
+                        firetouchinterest(LocalPlayer.Character.Torso, Block.hitbox, 0)
+                        firetouchinterest(LocalPlayer.Character.Torso, Block.hitbox, 1)
+                    end
+                end
+            end
+        end
+
+        --// AntiVoid
+        if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart and Settings.AntiVoidSettings.AntiVoid then
+            local Position = LocalPlayer.Character.PrimaryPart.Position
+            if Position.Y < -100 then
+                LocalPlayer.Character:SetPrimaryPartCFrame(Others.Teleports.nex)
+            end
+        end
+
+        --// AntiCrim
+        if Settings.AntiCrimSettings.AntiCrim and LocalPlayer.Team ~= "Guards" and LocalPlayer.Team ~= "Neutral" then
+            if #game.Teams.Guards:GetPlayers() < 8 then
+                TeamEvent("Bright blue")
+            else
+                TeamEvent("Medium stone grey")
+            end
+        end
+
+        --// AntiBring
+        if Settings.AntiBringSettings.AntiBring then
+            if Humanoid.Sit and Humanoid.SeatPart == "VehicleSeat" then
+                Humanoid.Sit = false
+            end
+        end
+
+        --// CopyTeam
+        if Others.CopyTeam.CopyTeamOn then
+            for _, Player in pairs(Players:GetPlayers()) do
+                if Others.CopyTeam.Player == Player then
+                    if tostring(Others.CopyTeam.Player.Team.TeamColor) ~= tostring(LocalPlayer.Team.TeamColor) then
+                        TeamEvent(Others.CopyTeam.Player.Team.TeamColor.Name)
+                    end
                     break
                 end
             end
         end
-    end)
 
-    --// AutoGiveGuns
-    Hum.Died:Connect(function()
-        if Hum.Health == 100 and Settings.AutoGiveGunsSettings.AutoGiveGuns then
-            for _, Gun in pairs(Others.GunOrder) do
-                ItemHandler(Gun)
+        --// LoopKill
+        for i, GetPlayers in pairs(Others.LoopKillPlayers) do
+            Kill(GetPlayers)
+            if Settings.LoopKillSettings.CoolDown then
+                task.wait(Settings.LoopKillSettings.CoolDown)
             end
         end
-    end)
 
-    --// SpawnLocation
-    if typeof(Others.SpawnLocationNewCFrame.CFrame) == "CFrame" and not Settings.AutoRespawnSettings.AutoRespawn then
-        character:SetPrimaryPartCFrame(Others.SpawnLocationNewCFrame.CFrame)
-    end
-
-    --// GodMode
-    if Settings.GodModeSettings.GodModeSettings then
-        BreakHum()
-        task.wait(3)
-    end
-end)
-
---// HeartBeat:Connect
-
---// HeartBeat:Connect
-HeartBeat:Connect(function()
-    --// Loop Jump Power
-    if Settings.JumpPowerSettings.Active then
-        JumpPower(Settings.JumpPowerSettings.Number)
-    end
-    
-    --// Loop Walk Speed
-    if Settings.LoopWalkSpeedSettings.Active then
-        WalkSpeed(Settings.LoopWalkSpeedSettings.LWalkSpeed)
-    end
-    
-    --// NoClip
-    if Settings.NoclipSettings.Noclip then
-        for _, Part in ipairs(Character:GetDescendants()) do
-            if Part:IsA("BasePart") or Part:IsA("Part") then
-                Part.CanCollide = false
+        --// LoopTaze
+        for i, GetPlayers in pairs(Others.LoopTasePlayers) do
+            Tase(GetPlayers)
+            if Settings.LoopTaseSettings.Delay then
+                task.wait(Settings.LoopTaseSettings.Delay)
             end
         end
-    end
-    
-    --// Kill Aura
-    if Settings.killAuraSettings.killAura then
-        task.wait()
-        for _, Player in pairs(Players:GetChildren()) do
-            local Distance = (LocalPlayer.Character.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude
-            if Distance <= Settings.killAuraSettings.studs then
-                Kill(Player.Name)
-            end
-        end
-    end
-    
-    --// Door Aura
-    for _, Door in pairs(Workspace.Doors:GetChildren()) do
-        if Door.Name == "door_v3" then
-            local Block = Door:FindFirstChild("Block")
-            if Block then
-                local Distance = (Block.hitbox.Position - LocalPlayer.Character.HumanoidRootPart.Position).magnitude
-                if Distance <= Settings.DoorSettings.studs then
-                    firetouchinterest(LocalPlayer.Character.Torso, Block.hitbox, 0)
-                    firetouchinterest(LocalPlayer.Character.Torso, Block.hitbox, 1)
+
+        --// LoopBring
+        for i, Player in ipairs(Others.LoopBringPlayers) do
+            if Players:FindFirstChild(Player) then
+                if Settings.LoopBringSettings.Position then
+                    Teleport(Player, Settings.LoopBringSettings.Position, Settings.LoopBringSettings.Delay)
+                else
+                    Teleport(Player, Character:FindFirstChild("Head"), Settings.LoopBringSettings.Delay)
                 end
             end
         end
-    end
-    
-    --// AntiVoid
-    if LocalPlayer.Character and LocalPlayer.Character.PrimaryPart and Settings.AntiVoidSettings.AntiVoid then
-        local Position = LocalPlayer.Character.PrimaryPart.Position
-        if Position.Y < -100 then
-            LocalPlayer.Character:SetPrimaryPartCFrame(Others.Teleports.nex)
-        end
-    end
-    
-    --// CopyTeam
-    if Others.CopyTeam.CopyTeamOn then
-        for _, Player in pairs(Players:GetPlayers()) do
-            if Others.CopyTeam.Player == Player then
-                if tostring(Others.CopyTeam.Player.Team.TeamColor) ~= tostring(LocalPlayer.Team.TeamColor) then
-                    TeamEvent(Others.CopyTeam.Player.Team.TeamColor.Name)
-                end
-                break
-            end
-        end
-    end
-    
-    --// LoopKill
-    for i, GetPlayers in pairs(Others.LoopKillPlayers) do
-        Kill(GetPlayers)
-        if Settings.LoopKillSettings.CoolDown then
-            task.wait(Settings.LoopKillSettings.CoolDown)
-        end
-    end
-    
-    --// LoopTaze
-    for i, GetPlayers in pairs(Others.LoopTasePlayers) do
-        Tase(GetPlayers)
-        if Settings.LoopTaseSettings.Delay then
-            task.wait(Settings.LoopTaseSettings.Delay)
-        end
-    end
-    
-    --// LoopBring
-    for i, Player in ipairs(Others.LoopBringPlayers) do
-        if Players:FindFirstChild(Player) then
-            if Settings.LoopBringSettings.Position then
-                Teleport(Player, Settings.LoopBringSettings.Position, Settings.LoopBringSettings.Delay)
-            else
-                Teleport(Player, Character:FindFirstChild("Head"), Settings.LoopBringSettings.Delay)
-            end
-        end
-    end
 
-    --// AntiTaze
-    if Settings.AntiTaseSettings.AntiTaze then
-        if getconnections(TazePlayer.OnClientEvent)[1]  then
-            getconnections(TazePlayer.OnClientEvent)[1]:Disconnect()            
+        --// AntiTaze
+        if Settings.AntiTaseSettings.AntiTaze then
+            if getconnections(TazePlayer.OnClientEvent)[1] then
+                getconnections(TazePlayer.OnClientEvent)[1]:Disconnect()
+            end
+        else
+            getconnections(TazePlayer.OnClientEvent)[1]:Enable()
         end
-    else
-        getconnections(TazePlayer.OnClientEvent)[1]:Enable()
-    end
 
-    --// Force Field
-    if Settings.ForceFieldSettings.ForceField then
-        local OldPos = Character.PrimaryPart.CFrame
-        Character.Head:Destroy() --// destroys head
-        local Head = Character:WaitForChild("Head")
-        Head.CFrame = OldPos
-        task.wait(5)
+        --// Force Field
+        if Settings.ForceFieldSettings.ForceField then
+            local OldPos = Character.PrimaryPart.CFrame
+            Character.Head:Destroy() --// destroys head
+            local Head = Character:WaitForChild("Head")
+            Head.CFrame = OldPos
+            task.wait(5)
+        end
     end
-end)
+)
 
 --// Command Handler + Commands
 
 local Commands = {
+    Prefix = {
+        Aliases = {"prefix", "customprefix"},
+        Func = function(Input)
+            Settings.Prefixs.ChatPrefix = Input
+        end
+    },
     Kill = {
         Aliases = {"k", "kill"},
         Func = function(Player)
@@ -672,9 +701,12 @@ local Commands = {
     ServerHop = {
         Aliases = {"serverhop"},
         Func = function()
-            local Success, errorMsg = pcall(function()
-                game:GetService("TeleportService"):Teleport(game.PlaceId, math.random())
-            end)
+            local Success, errorMsg =
+                pcall(
+                function()
+                    game:GetService("TeleportService"):Teleport(game.PlaceId, math.random())
+                end
+            )
             if not Success then
                 game:GetService("TeleportService"):Teleport(game.PlaceId, math.random())
             end
@@ -705,14 +737,14 @@ local Commands = {
         Func = function(player)
             local Player = GetPlayer(player[2])
             if Players:FindFirstChild(Player) then
-                LocalPlayer.Camera.Subject = Player.Character
+                workspace.CurrentCamera.CameraSubject = Player.Character
             end
         end
     },
     Unview = {
         Aliases = {"unview"},
         Func = function()
-            LocalPlayer.Camera.Subject = Character
+            workspace.CurrentCamera.CameraSubject = Character
         end
     },
     ChangeTeam = {
@@ -750,18 +782,18 @@ local Commands = {
                 Settings.DoorSettings.OpenAllDoors = not Settings.DoorSettings.OpenAllDoors
             elseif type(tonumber(num[2])) == "number" then
                 Settings.DoorSettings.OpenAllDoors = true
-                Settings.DoorSettings.studs = num[2]
+                Settings.DoorSettings.Studs = num[2]
             end
         end
     },
-    killAura = {
+    KillAura = {
         Aliases = {"ka", "aura", "killaura"},
         Func = function(num)
             if type(tonumber(num[2])) == "number" then
-                Settings.killAuraSettings.studs = num
-                Settings.killAuraSettings.killAura = true
+                Settings.KillAuraSettings.Studs = num
+                Settings.KillAuraSettings.KillAura = true
             else
-                Settings.killAuraSettings.killAura = not Settings.killAuraSettings.killAura
+                Settings.KillAuraSettings.KillAura = not Settings.KillAuraSettings.KillAura
             end
         end
     },
@@ -803,6 +835,12 @@ local Commands = {
             Settings.AntiBringSettings.AntiBring = not Settings.AntiBringSettings.AntiBring
         end
     },
+    AntiCrim = {
+        Aliases = {"ac", "anticriminal"},
+        Func = function()
+            Settings.AntiCrimSettings.AntiCrim = not Settings.AntiCrimSettings.AntiCrim
+        end
+    },
     --[[
     Teleport = {
         Aliases = {"teleport"},
@@ -830,7 +868,6 @@ local Commands = {
         end
     },
     ]]
-
     CopyTeam = {
         Aliases = {"ct", "copyteam"},
         Func = function(player)
@@ -899,7 +936,11 @@ local Commands = {
     Goto = {
         Aliases = {"goto", "to"},
         Func = function(Arg)
-            Character:SetPrimaryPartCFrame(Players:FindFirstChild(GetPlayer(Arg[2])).PrimaryPart.CFrame)
+            if Character.Head then
+                Character.Head = Players:FindFirstChild(GetPlayer(Arg[2])).PrimaryPart.CFrame
+            else
+                warn("No Head on character please wait until fully respawned")
+            end
         end
     },
     Respawn = {
@@ -913,53 +954,67 @@ local Commands = {
     }
 }
 
-OnClientEvent:Connect(function(Chatted)
-    local Message = Chatted.Message
-    local MessageCreator = Chatted.FromSpeaker
-    local Arguments = string.split(Message, " ")
+OnClientEvent:Connect(
+    function(Chatted)
+        local Message = Chatted.Message
+        local MessageCreator = Chatted.FromSpeaker
+        local Arguments = string.split(Message, " ")
 
-    local function GetCommandFromMessage(Message)
-        return string.sub(Message, #Others.Prefixs.ChatPrefix + 1):lower()
-    end
-
-    local function IsValidCommand()
-        return Message:sub(1, #Others.Prefixs.ChatPrefix) == Others.Prefixs.ChatPrefix
-    end
-
-    local function PrintCommands()
-        for Command, Cmd in pairs(Commands) do
-            if type(Cmd) == "table" and Cmd.Func then
-                local Aliases = table.concat(Cmd.Aliases, ", ")
-                print(Command .. " (" .. Aliases .. ")")
-            end
+        local function GetCommandFromMessage(Message)
+            return string.sub(Message, #Others.Prefixs.ChatPrefix + 1):lower()
         end
-    end
 
-    local function ExecuteCommand(Command, Args)
-        for _, Cmd in pairs(Commands) do
-            for _, Alias in ipairs(Cmd.Aliases) do
-                if Alias == Command then
-                    Cmd.Func(Args)
-                    return true
+        local function IsValidCommand()
+            return Message:sub(1, #Others.Prefixs.ChatPrefix) == Others.Prefixs.ChatPrefix
+        end
+
+        local function PrintCommands()
+            for Command, Cmd in pairs(Commands) do
+                if type(Cmd) == "table" and Cmd.Func then
+                    local Aliases = table.concat(Cmd.Aliases, ", ")
+                    print(Command .. " (" .. Aliases .. ")")
                 end
             end
         end
-        return false
-    end
 
-    if MessageCreator == LocalPlayer.Name and IsValidCommand(Message) then
-        local Command = GetCommandFromMessage(Arguments[1])
-        if Command == "cmds" then
-            PrintCommands()
-        else
-            if Command ~= "" and Command ~= nil then
-                local Success = ExecuteCommand(Command, Arguments)
-                if not Success then
-                    warn("Invalid Command: " .. Command)
+        local function ExecuteCommand(Command, Args)
+            for _, Cmd in pairs(Commands) do
+                for _, Alias in ipairs(Cmd.Aliases) do
+                    if Alias == Command then
+                        Cmd.Func(Args)
+                        return true
+                    end
+                end
+            end
+            return false
+        end
+
+        if MessageCreator == LocalPlayer.Name and IsValidCommand(Message) then
+            local Command = GetCommandFromMessage(Arguments[1])
+            if Command == "cmds" then
+                PrintCommands()
+            else
+                if Command ~= "" and Command ~= nil then
+                    local Success = ExecuteCommand(Command, Arguments)
+                    if not Success then
+                        warn("Invalid Command: " .. Command)
+                    end
                 end
             end
         end
     end
-end)
+)
 
-print("Successfully Loaded in " .. (os.clock() - StartTime) * 1000 .. " ms \n" .. "Contributors\n" .. "JJSploit On Top -- Main Developer and Founder\n" .. "Lolegic -- Main Developer and Co-Founder\n" .. "Che -- UI Developer and Checking The Script\n" .. "Atari -- Checked The Script\n" .. "ChatGPT -- Better methods for different things within this script")
+StarterGui:SetCore(
+    "SendNotification",
+    {
+        Title = "Successfully Loaded",
+        Text = "Time Taken: " .. (os.clock() - StartTime) * 1000 .. " ms",
+        Duration = 3
+    }
+)
+
+print("Prefix: " .. Settings.Prefixs.ChatPrefix .. "\nContributors:")
+for _, Contributor in pairs(ContributorsList) do
+    print("- " .. Contributor.Username .. " | " .. Contributor.Importance)
+end
