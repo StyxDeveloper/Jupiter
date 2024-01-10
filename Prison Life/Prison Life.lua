@@ -1,33 +1,4 @@
---[[
-
-    Should Work Now
-
-    ChangeLog:
-    Removed Useless Things
-    Made Code Show Better Practices By Swapping Function To Local Function
-    Made Credits List Look Better
-    Fixed View
-    Now Only Uses 2 Naming Conventions (Pascal Casing and LowerCased Camel Casing)
-    Added Prefix Command
-    ReAdded AntiBring
-    ReAdded AntiCrim
-    Checks For FireTouchInterest (Creates A Fake FireTouch If User Doesnt Have It To Prevent Errors In The Script Expect Certain Functions To Not Work)
-    Removed GodMode Due To https://create.roblox.com/docs/reference/engine/enums/RejectCharacterDeletions
-    Added ChatLogger
-
-    --// Whenever I get time
-    Rank - Command logger - Command blacklisted - individual or all or group
-    UI - cmd gui and normal GUI
-    Customizable UI
-
-    --// Whenever PC exploits work
-    Bring
-    Crim
-    Spam arrest
-    Car bring
-    Loopbring
-
-]] --
+--// No longer receiving any updates, this script is fully out of support. 
 
 --// Contributors
 local ContributorsList = {
