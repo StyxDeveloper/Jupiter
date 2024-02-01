@@ -1,16 +1,19 @@
 # Jupiter
-Discontinued Prison Life Script:
-Features a lot more functions
-Fully open source
+Powerful Prison Life script, we feature almost all the features of our competitors and more. Jupiter takes great pride in production and producing various scripts and various other tools for developers and game enhancements alike. 
 
-Jupiter is made by : JJ Sploit On Top (Not Owner)#9685, Mr. Lolegic#1001, ?Che#6467
+Jupiter V1 was made by mainly Styx and Lolegic. With some help from various other people (Check credits at the beginning) 
+
+Jupiter V2 is made by Styx and Lolegic. 
 
 # What Does Jupiter Do?
-Jupiter was formerly a product made and designed by two individuals with our users at the core. However as times change so do what we as developers and people want. This little project will no longer be supported. Any quistions, comments, and or concerns about this product can be asked either via GitHub or Discord (styxdev). 
+Jupiter was formerly a product made and designed by two individuals with our users at the core. However as times change so do what we as developers and people want. This little project will no longer be supported. Any quistions, comments, and or concerns about this product can be asked via GitHub. 
 
 # Am I Allowed To Make A Pull Request?
-No as of now Jupiter will not be accepting any of the pull requests, we will not stop you from creating a fork though. You are more than allowed (check our license). 
+Yes we do however we WILL NOT accept any for V1. 
 
 
 # How Do I Use The Script
-Copy and paste our script source into your executor. This however is not recommended, this script is not fully supported anymore and will not be checked. I also do not know if it even works. 
+Copy and paste our script source into your executor. 
+
+V1 IS NOT RECOMMENDED FOR USE. 
+V2 WILL be. 
