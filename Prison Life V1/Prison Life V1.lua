@@ -1,4 +1,4 @@
---// No longer receiving any updates, this script is fully out of support. 
+--// No longer receiving any updates, this script is fully out of support.
 
 --// Contributors
 local ContributorsList = {
