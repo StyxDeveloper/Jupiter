@@ -334,7 +334,7 @@ end
 messageDoneFiltering.OnClientEvent:Connect(admin.handler)
 
 admin:createCommand("test", {
-    level = math.huge,
+    level = math.huge, -- Owner rank
     description = "This is just for showing you guys how to use this function.",
 }, function(player, arg1, arg2)
     print("This is who chatted ", player.Name)
