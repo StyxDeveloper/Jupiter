@@ -58,7 +58,7 @@ Autogiveguns
 View and unview
 Teamevent
 Exclude
-Fps boost
+Fps boost -- Remove bullets
 Open doors
 No doors
 Kill aura
@@ -86,6 +86,13 @@ Rejoin
 Goto
 Noclip
 Opengate
+
+GUI
+Main
+Command GUI
+List of Ranked Players and Settings
+Toggles/Antis
+Skid Check -- With Options
 
 
 Command Handler
