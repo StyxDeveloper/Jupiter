@@ -325,7 +325,7 @@ function admin.handler(message)
 
         local lastArg = args[nparams]
 
-        args[nparams] = string.sub(1, #lastArg - 1)
+        args[nparams] = string.sub(lastArg, 1, #lastArg - 1)
 
         command.callback(player, table.unpack(args))
     end    
