@@ -1,10 +1,9 @@
 --[[ Credits
     !! // The Jupiter Staff Team // !!
       *The Team*
-    // Styx Developer // 
+    // Styx Developer //
     // Lolegic //
-    // Che/Forest //
-    // chonker //
+    // Chonker //
 ]]
 
 --! Global Variables !-- 
@@ -18,15 +17,6 @@ local localPlayer = players.LocalPlayer
 local remote = workspace:WaitForChild("Remote")
 local messageDoneFiltering = replicatedStorage:WaitForChild("OnMessageDoneFiltering")
 
-function getConfig()
-    if(not isfile("admin.jupiter")) writefile("admin.jupiter", '{"prefix": {}, "admins": {}}')
-    return httpService:JSONDecode(readfile("admin.jupiter"))
-end
-
-function setConfig(config)
-    return writefile("admin.jupiter", httpService:JSONEncode(config))
-end
-
 --! Global Tables !-- 
 local Settings = {
   Prefixs = {
@@ -38,6 +28,8 @@ local Settings = {
 
 }
 
+local CommandLogs = {}
+
 --! Checks !-- 
 game.Loaded:Wait()
 
@@ -46,9 +38,16 @@ getgenv().IsJupiterLoaded = true
 
 --! Functions !--
 
---[[
-  I definetely want to add a logger for the Commands ran, a long with their success/error message. This way itll all be inputted to a table which will then be printable to console
+function getConfig()
+  if(not isfile("admin.jupiter")) writefile("admin.jupiter", '{"prefix": {}, "admins": {}}')
+  return httpService:JSONDecode(readfile("admin.jupiter"))
+end
 
+function setConfig(config)
+  return writefile("admin.jupiter", httpService:JSONEncode(config))
+end
+
+--[[
 Needed To Be made
 Functions
 
@@ -98,6 +97,16 @@ Rejoin
 Goto
 Noclip
 Opengate
+View (This also does unview)
+Command Logger (Local Player ONLY)
+
+GUI
+Main
+Command GUI
+List of Ranked Players and Settings
+Toggles/Antis
+Skid Check -- With Options
+Output
 
 GUI
 Main
@@ -119,15 +128,16 @@ local NeededFunctions = {
     Function = function(PlayerName: string)
       for _, player in pairs(players:GetPlayers()) do
         if (string.sub(player.Name:lower(), 1, #PlayerName) == PlayerName:lower()) or (string.sub(player.DisplayName:lower(), 1, #PlayerName) == PlayerName:lower()) then
-          return player
+          return player;
         end
       end
-      return nil
+      return nil;
     end
   },
   Log = {
-    Function = function(Code: string, Text: string)
-      print(Code .. ": " .. Text)
+    Function = function(Code: string, Text: string, FuncName: string, Player: string)
+      print(Code .. ": " .. Text);
+      table.insert(CommandLogs, Code .. " " .. Text .. " " .. FuncName .. " ", Player);
     end
   }
 }
@@ -139,16 +149,16 @@ local LocalPlayersFunctions = {
     Function = function(Args)
       if (Args[2]) then
         Settings.Prefixs.LocalPlayerPrefix = Args[2];
-        NeededFunctions.Log.Function("Success", "Prefix was changed to " .. Args[2]);
+        NeededFunctions.Log.Function("Success", "Prefix was changed to " .. Args[2], "prefix");
       else
-        NeededFunctions.Log.Function("Error", "Prefix was not found");
+        NeededFunctions.Log.Function("Error", "Prefix was not found", "prefix", "LocalPlayer");
       end
     end
   },
   Rejoin = {
     Function = function()
       teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId);
-      NeededFunctions.Log.Function("Success", "Rejoining");
+      NeededFunctions.Log.Function("Success", "Rejoining", "rejoin", "LocalPlayer");
     end
   },
   ServerHop = { -- Needs To Be Completed
@@ -160,9 +170,9 @@ local LocalPlayersFunctions = {
     Function = function(Args)
       if (Args[2] ~= nil) and (localPlayer.Character.Head) and (NeededFunctions.GetPlayers.Function(Args[2])) then
         localPlayer.Character.Head.CFrame = NeededFunctions.GetPlayers.Function(Args[2]).Character.Head.CFrame;
-        NeededFunctions.Log.Function("Success", "Teleported to " .. NeededFunctions.GetPlayers(Args[2]));
+        NeededFunctions.Log.Function("Success", "Teleported to " .. NeededFunctions.GetPlayers(Args[2]), "goto", "LocalPlayer");
       else
-        NeededFunctions.Log.Function("Error", "Player was either not inputted or found, please retry and check names");
+        NeededFunctions.Log.Function("Error", "Player was either not inputted or found, please retry and check names", "goto", "LocalPlayer");
       end
     end
   },
@@ -175,29 +185,39 @@ local LocalPlayersFunctions = {
   Noclip = {
     Function = function()
       Settings.Noclip = not Settings.Noclip;
-      NeededFunctions.Log.Function("Success", "Noclip has been toggled to " .. tostring(Settings.Noclip));
+      NeededFunctions.Log.Function("Success", "Noclip has been toggled to " .. tostring(Settings.Noclip), "noclip", "LocalPlayer");
     end
   },
   Gate = {
     Function = function(Args)
       remote.ItemHandler:InvokeServer(game:GetService("Workspace").Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"]);
-      NeededFunctions.Log.Function("Success", "The Prison Gate has been opened");
+      NeededFunctions.Log.Function("Success", "The Prison Gate has been opened", "gate", "LocalPlayer");
     end
   },
   View = {
     Function = function(Args)
       if (NeededFunctions.GetPlayers.Function(Args[2])) then
         game:GetService("Workspace").CurrentCamera.CameraSubject = NeededFunctions.GetPlayers(Args[2]).Character;
-        NeededFunctions.Log.Function("Success", "Currently viewing " .. NeededFunctions.GetPlayers(Args[2]));
+        NeededFunctions.Log.Function("Success", "Currently viewing " .. NeededFunctions.GetPlayers(Args[2]), "view", "LocalPlayer");
       elseif (Args[2] == nil) then
-        game:GetService("Workspace").CurrentCamera.CameraSubject = localPlayer.Character
-        NeededFunctions.Log.Function("Error", "Could be an error, however if this wasnt ignore this error message. If this was an error than check that you put a name for a player")
+        game:GetService("Workspace").CurrentCamera.CameraSubject = localPlayer.Character;
+        NeededFunctions.Log.Function("Error", "Could be an error, however if this wasnt ignore this error message. If this was an error than check that you put a name for a player", "view", "LocalPlayer");
       else
-        NeededFunctions.Log.Function("Error", "This is an error, please recheck username inputted. If not check if player is still in server.")
+        NeededFunctions.Log.Function("Error", "This is an error, please recheck username inputted. If not check if player is still in server.", "view", "LocalPlayer");
       end
     end
   },
-  
+  WalkSpeed= {
+    Function = function(Args)
+      if (typeof(Args[2]) ~= "number") and (Args[2] < 0) and not (nil) then
+        NeededFunctions.Log.Function("Error", "Please enter a valid number", "walkspeed", "LocalPlayer")
+      else
+        localPlayer.Character.Humanoid.WalkSpeed = 
+        -- Leftoff
+      end
+    end
+  },
+
 }
 
 
