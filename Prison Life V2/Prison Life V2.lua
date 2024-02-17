@@ -1,9 +1,8 @@
 --[[ Credits
     !! // The Jupiter Staff Team // !!
-      *The Team*
-    // Styx Developer //
-    // Lolegic //
-    // Chonker //
+    // * Styx Developer * \\
+    // * Lolegic *  \\
+    // ** Chonker * \\
 ]]
 
 --! Global Variables !-- 
@@ -38,12 +37,13 @@ getgenv().IsJupiterLoaded = true
 
 --! Functions !--
 
-function getConfig()
-  if(not isfile("admin.jupiter")) writefile("admin.jupiter", '{"prefix": {}, "admins": {}}')
+local function getConfig()
+  if(not isfile("admin.jupiter")) then
+  writefile("admin.jupiter", '{"prefix": {}, "admins": {}}')
   return httpService:JSONDecode(readfile("admin.jupiter"))
 end
 
-function setConfig(config)
+local function setConfig(config)
   return writefile("admin.jupiter", httpService:JSONEncode(config))
 end
 
@@ -53,23 +53,17 @@ Functions
 
 Make firetouchinterest as some executors don't contain this
 
-
 Kill player (both melee event and gun event)
 Item Handler
 AutoRespawn
-Walk speed
-Loop walkspeed
-Jumppower
-Loop jumppower
 Arrest
 Auto fire rate
 Sit
 Serverhop
 Autogiveguns
-View and unview
 Teamevent
 Exclude
-Fps boost -- Remove bullets
+Fps boost -- Remove bullets also
 Open doors
 No doors
 Kill aura
@@ -98,8 +92,9 @@ Goto
 Noclip
 Opengate
 View (This also does unview)
-Command Logger (Local Player ONLY)
-
+Command Logger (Local Player ONLY) -- Ill look into making the ranked ones also have this, which will be added to a file
+Walk Speed
+Jump Power
 
 GUI
 Main
@@ -108,6 +103,8 @@ List of Ranked Players and Settings
 Toggles/Antis
 Skid Check -- With Options
 Output
+chatlogs
+Sections (Antis, Abusive, Misc).
 
 Command Handler
 Main
@@ -132,9 +129,21 @@ local NeededFunctions = {
       print(Code .. ": " .. Text);
       table.insert(CommandLogs, Code .. " " .. Text .. " " .. FuncName .. " ", Player);
     end
-  }
-}
+  },
+  IllegalRegionDetection = { -- WILL BE USED IN ARREST
+    Function = function(Player : string)
+      if (Player.Character) and (replicatedStorage.Modules_client.RegionModule_client.findRegion(Player.Character)["Name"]) then
+        for _, RegionValue in pairs(replicatedStorage.PermittedRegions:GetChildren()) do
+          if (replicatedStorage.Modules_client.RegionModule_client.findRegion(Player.Character)["Name"] == RegionValue.Value) then
+            return false;
+          end
+        end
+      end
+      return true;
+    end
+  },
 
+}
 
 -- Local Players Commands
 local LocalPlayersFunctions = {
@@ -200,17 +209,27 @@ local LocalPlayersFunctions = {
       end
     end
   },
-  WalkSpeed= {
+  WalkSpeed = {
     Function = function(Args)
       if (typeof(Args[2]) ~= "number") and (Args[2] < 0) and not (nil) then
         NeededFunctions.Log.Function("Error", "Please enter a valid number", "walkspeed", "LocalPlayer")
       else
-        localPlayer.Character.Humanoid.WalkSpeed = 
-        -- Leftoff
+        localPlayer.Character.Humanoid.WalkSpeed = Args[2]
+        NeededFunctions.Log.Function("Success", "Walkspeed changed to " .. Args[2], "Walkspeed", "LocalPlayer")
       end
     end
   },
-
+  Jumppower = {
+    Function = function(Args)
+      if (typeof(Args[2]) ~= "number") and (Args[2] < 0) and not (nil) then
+        NeededFunctions.Log.Function("Error", "Please enter a valid number", "Jumppower", "LocalPlayer")
+      else
+        localPlayer.Character.Humanoid.JumpPower = Args[2]
+        NeededFunctions.Log.Function("Success", "Jumppower changed to " .. Args[2], "Jumppower", "LocalPlayer")
+      end
+    end
+  },
+  
 }
 
 
@@ -221,7 +240,7 @@ Command Handler
  = {
   Aliases = {""},
   Function = function(Args)
-    
+
   end
 },
 
@@ -229,7 +248,7 @@ Command Handler
 Functions
  = {
   Function = function(Args)
-    
+
   end
 },
 
