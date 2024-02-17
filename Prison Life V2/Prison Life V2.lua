@@ -1,8 +1,15 @@
 --[[ Credits
     !! // The Jupiter Staff Team // !!
+<<<<<<< HEAD
     // * Styx Developer * \\
     // * Lolegic *  \\
     // ** Chonker * \\
+=======
+      *The Team*
+    // Styx Developer //
+    // Lolegic //
+    // Chonker //
+>>>>>>> 7b62850e8817b1cb8375449ef9d98a08e9158c98
 ]]
 
 --! Global Variables !-- 
@@ -37,6 +44,7 @@ getgenv().IsJupiterLoaded = true
 
 --! Functions !--
 
+<<<<<<< HEAD
 local function getConfig()
   if(not isfile("admin.jupiter")) then
   writefile("admin.jupiter", '{"prefix": {}, "admins": {}}')
@@ -44,6 +52,14 @@ local function getConfig()
 end
 
 local function setConfig(config)
+=======
+function getConfig()
+  if(not isfile("admin.jupiter")) writefile("admin.jupiter", '{"prefix": {}, "admins": {}}')
+  return httpService:JSONDecode(readfile("admin.jupiter"))
+end
+
+function setConfig(config)
+>>>>>>> 7b62850e8817b1cb8375449ef9d98a08e9158c98
   return writefile("admin.jupiter", httpService:JSONEncode(config))
 end
 
@@ -92,9 +108,21 @@ Goto
 Noclip
 Opengate
 View (This also does unview)
+<<<<<<< HEAD
 Command Logger (Local Player ONLY) -- Ill look into making the ranked ones also have this, which will be added to a file
 Walk Speed
 Jump Power
+=======
+Command Logger (Local Player ONLY)
+
+GUI
+Main
+Command GUI
+List of Ranked Players and Settings
+Toggles/Antis
+Skid Check -- With Options
+Output
+>>>>>>> 7b62850e8817b1cb8375449ef9d98a08e9158c98
 
 GUI
 Main
@@ -206,6 +234,7 @@ local LocalPlayersFunctions = {
         NeededFunctions.Log.Function("Error", "Could be an error, however if this wasnt ignore this error message. If this was an error than check that you put a name for a player", "view", "LocalPlayer");
       else
         NeededFunctions.Log.Function("Error", "This is an error, please recheck username inputted. If not check if player is still in server.", "view", "LocalPlayer");
+<<<<<<< HEAD
       end
     end
   },
@@ -226,10 +255,22 @@ local LocalPlayersFunctions = {
       else
         localPlayer.Character.Humanoid.JumpPower = Args[2]
         NeededFunctions.Log.Function("Success", "Jumppower changed to " .. Args[2], "Jumppower", "LocalPlayer")
+=======
+>>>>>>> 7b62850e8817b1cb8375449ef9d98a08e9158c98
       end
     end
   },
-  
+  WalkSpeed= {
+    Function = function(Args)
+      if (typeof(Args[2]) ~= "number") and (Args[2] < 0) and not (nil) then
+        NeededFunctions.Log.Function("Error", "Please enter a valid number", "walkspeed", "LocalPlayer")
+      else
+        localPlayer.Character.Humanoid.WalkSpeed = 
+        -- Leftoff
+      end
+    end
+  },
+
 }
 
 
