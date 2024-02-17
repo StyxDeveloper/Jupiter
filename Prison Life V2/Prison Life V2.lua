@@ -16,24 +16,23 @@ local localPlayer = players.LocalPlayer
 local remote = workspace:WaitForChild("Remote")
 local messageDoneFiltering = replicatedStorage:WaitForChild("OnMessageDoneFiltering")
 
---! Global Tables !-- 
-local Settings = {
-  Prefixs = {
-    LocalPlayerPrefix = ".",
-    CommandGUIPrefix = ".",
-    RankedPlayersPrefix = ":"
-  },
-  Noclip = false,
-
+--! Global Tables !--
+local setting = {
+  Noclip = false
 }
 
-local CommandLogs = {}
+local commandLogs = {}
+local doorsTable = {}
 
 --! Checks !-- 
 game.Loaded:Wait()
 
 assert(not IsJupiterLoaded, "Jupiter is already loaded")
 getgenv().IsJupiterLoaded = true
+
+for _, Door in next, workspace.Doors:GetChildren() do
+  table.insert(doorsTable, Door)
+end
 
 --! Functions !--
 
@@ -112,9 +111,11 @@ Ranked system
 Handles Chat Logger also
 ]]
 
+-- Converting shit to Camal Casing
+
 -- Get Player
-local NeededFunctions = {
-  GetPlayers = {
+local neededFunctions = {
+  getPlayers = {
     Function = function(PlayerName: string)
       for _, player in pairs(players:GetPlayers()) do
         if (string.sub(player.Name:lower(), 1, #PlayerName) == PlayerName:lower()) or (string.sub(player.DisplayName:lower(), 1, #PlayerName) == PlayerName:lower()) then
@@ -124,13 +125,13 @@ local NeededFunctions = {
       return nil;
     end
   },
-  Log = {
+  log = {
     Function = function(Code: string, Text: string, FuncName: string, Player: string)
       print(Code .. ": " .. Text);
-      table.insert(CommandLogs, Code .. " " .. Text .. " " .. FuncName .. " ", Player);
+      table.insert(commandLogs, Code .. " " .. Text .. " " .. FuncName .. " ", Player);
     end
   },
-  IllegalRegionDetection = { -- WILL BE USED IN ARREST
+  illegalRegionDetection = { -- WILL BE USED IN ARREST
     Function = function(Player : string)
       if (Player.Character) and (replicatedStorage.Modules_client.RegionModule_client.findRegion(Player.Character)["Name"]) then
         for _, RegionValue in pairs(replicatedStorage.PermittedRegions:GetChildren()) do
@@ -141,26 +142,28 @@ local NeededFunctions = {
       end
       return true;
     end
-  },
+  }
 
 }
 
 -- Local Players Commands
 local LocalPlayersFunctions = {
   Prefix = {
+    --[[
     Function = function(Args)
       if (Args[2]) then
         Settings.Prefixs.LocalPlayerPrefix = Args[2];
-        NeededFunctions.Log.Function("Success", "Prefix was changed to " .. Args[2], "prefix");
+        neededFunctions.log.Function("Success", "Prefix was changed to " .. Args[2], "prefix");
       else
-        NeededFunctions.Log.Function("Error", "Prefix was not found", "prefix", "LocalPlayer");
+        neededFunctions.log.Function("Error", "Prefix was not found", "prefix", "LocalPlayer");
       end
     end
   },
+    ]]
   Rejoin = {
     Function = function()
       teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId);
-      NeededFunctions.Log.Function("Success", "Rejoining", "rejoin", "LocalPlayer");
+      neededFunctions.log.Function("Success", "Rejoining", "rejoin", "LocalPlayer");
     end
   },
   ServerHop = { -- Needs To Be Completed
@@ -170,11 +173,11 @@ local LocalPlayersFunctions = {
   },
   Goto = {
     Function = function(Args)
-      if (Args[2] ~= nil) and (localPlayer.Character.Head) and (NeededFunctions.GetPlayers.Function(Args[2])) then
-        localPlayer.Character.Head.CFrame = NeededFunctions.GetPlayers.Function(Args[2]).Character.Head.CFrame;
-        NeededFunctions.Log.Function("Success", "Teleported to " .. NeededFunctions.GetPlayers(Args[2]), "goto", "LocalPlayer");
+      if (Args[2] ~= nil) and (localPlayer.Character.Head) and (neededFunctions.GetPlayer.Function(Args[2])) then
+        localPlayer.Character.Head.CFrame = neededFunctions.GetPlayer.Function(Args[2]).Character.Head.CFrame;
+        neededFunctions.log.Function("Success", "Teleported to " .. neededFunctions.GetPlayers(Args[2]), "goto", "LocalPlayer");
       else
-        NeededFunctions.Log.Function("Error", "Player was either not inputted or found, please retry and check names", "goto", "LocalPlayer");
+        neededFunctions.log.Function("Error", "Player was either not inputted or found, please retry and check names", "goto", "LocalPlayer");
       end
     end
   },
@@ -186,46 +189,46 @@ local LocalPlayersFunctions = {
   },
   Noclip = {
     Function = function()
-      Settings.Noclip = not Settings.Noclip;
-      NeededFunctions.Log.Function("Success", "Noclip has been toggled to " .. tostring(Settings.Noclip), "noclip", "LocalPlayer");
+      setting.Noclip = not setting.Noclip;
+      neededFunctions.log.Function("Success", "Noclip has been toggled to " .. tostring(setting.Noclip), "noclip", "LocalPlayer");
     end
   },
   Gate = {
     Function = function(Args)
       remote.ItemHandler:InvokeServer(game:GetService("Workspace").Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"]);
-      NeededFunctions.Log.Function("Success", "The Prison Gate has been opened", "gate", "LocalPlayer");
+      neededFunctions.log.Function("Success", "The Prison Gate has been opened", "gate", "LocalPlayer");
     end
   },
   View = {
     Function = function(Args)
-      if (NeededFunctions.GetPlayers.Function(Args[2])) then
-        game:GetService("Workspace").CurrentCamera.CameraSubject = NeededFunctions.GetPlayers(Args[2]).Character;
-        NeededFunctions.Log.Function("Success", "Currently viewing " .. NeededFunctions.GetPlayers(Args[2]), "view", "LocalPlayer");
+      if (neededFunctions.GetPlayer.Function(Args[2])) then
+        game:GetService("Workspace").CurrentCamera.CameraSubject = neededFunctions.GetPlayers(Args[2]).Character;
+        neededFunctions.log.Function("Success", "Currently viewing " .. neededFunctions.GetPlayers(Args[2]), "view", "LocalPlayer");
       elseif (Args[2] == nil) then
         game:GetService("Workspace").CurrentCamera.CameraSubject = localPlayer.Character;
-        NeededFunctions.Log.Function("Error", "Could be an error, however if this wasnt ignore this error message. If this was an error than check that you put a name for a player", "view", "LocalPlayer");
+        neededFunctions.log.Function("Error", "Could be an error, however if this wasnt ignore this error message. If this was an error than check that you put a name for a player", "view", "LocalPlayer");
       else
-        NeededFunctions.Log.Function("Error", "This is an error, please recheck username inputted. If not check if player is still in server.", "view", "LocalPlayer");
+        neededFunctions.log.Function("Error", "This is an error, please recheck username inputted. If not check if player is still in server.", "view", "LocalPlayer");
       end
     end
   },
   WalkSpeed = {
     Function = function(Args)
       if (typeof(Args[2]) ~= "number") and (Args[2] < 0) and not (nil) then
-        NeededFunctions.Log.Function("Error", "Please enter a valid number", "walkspeed", "LocalPlayer")
+        neededFunctions.log.Function("Error", "Please enter a valid number", "walkspeed", "LocalPlayer");
       else
-        localPlayer.Character.Humanoid.WalkSpeed = Args[2]
-        NeededFunctions.Log.Function("Success", "Walkspeed changed to " .. Args[2], "Walkspeed", "LocalPlayer")
+        localPlayer.Character.Humanoid.WalkSpeed = Args[2];
+        neededFunctions.log.Function("Success", "Walkspeed changed to " .. Args[2], "Walkspeed", "LocalPlayer");
       end
     end
   },
   Jumppower = {
     Function = function(Args)
       if (typeof(Args[2]) ~= "number") and (Args[2] < 0) and not (nil) then
-        NeededFunctions.Log.Function("Error", "Please enter a valid number", "Jumppower", "LocalPlayer")
+        neededFunctions.log.Function("Error", "Please enter a valid number", "Jumppower", "LocalPlayer");
       else
-        localPlayer.Character.Humanoid.JumpPower = Args[2]
-        NeededFunctions.Log.Function("Success", "Jumppower changed to " .. Args[2], "Jumppower", "LocalPlayer")
+        localPlayer.Character.Humanoid.JumpPower = Args[2];
+        neededFunctions.log.Function("Success", "Jumppower changed to " .. Args[2], "Jumppower", "LocalPlayer");
       end
     end
   },
@@ -341,7 +344,7 @@ function admin.handler(message)
 
         if(not text:match("^"..cmd)) then continue end
         if(command.rank > admin:getRank(info.rank).level) then continue end
-        
+
         local funcInfo = debug.getinfo(command.callback)
         local args = {}
         local words = string.split(text, cmd)[1].split(" ")
@@ -360,7 +363,7 @@ function admin.handler(message)
         args[nparams] = string.sub(lastArg, 1, #lastArg - 1)
 
         command.callback(player, table.unpack(args))
-    end    
+    end
 end
 
 messageDoneFiltering.OnClientEvent:Connect(admin.handler)
@@ -374,9 +377,14 @@ admin:createCommand("test", {
     print("This is second argument will be pack every other arg after it ", arg2)
 end)
 
+
+
+
+end
+
 --! HeartBeat Connection !--
 runService:Connect(function()
-  if Settings.Noclip then
+  if setting.Noclip then
     for _,Part in pairs(localPlayer.Character:GetDescendants()) do
       if (Part:IsA("BasePart")) or (Part:IsA("Part")) then
           Part.CanCollide = false;
