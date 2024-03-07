@@ -1,8 +1,10 @@
---[[ Credits
-    !! // The Jupiter Staff Team // !!
-    // * Styx Developer * \\
-    // * Lolegic *  \\
-    // ** Chonker * \\
+--[[
+    Project: Jupiter
+    Status: In Progress, V2
+    Developer: Styx
+    Contributors:
+    - Lolegic
+    - Chonker
 ]]
 
 --! Global Variables !-- 
@@ -17,10 +19,7 @@ local remote = workspace:WaitForChild("Remote")
 local messageDoneFiltering = replicatedStorage:WaitForChild("OnMessageDoneFiltering")
 
 --! Global Tables !--
-local setting = {
-  Noclip = false
-}
-
+local noclipSettings = {Noclip = false}
 local commandLogs = {}
 local doorsTable = {}
 
@@ -57,7 +56,6 @@ Item Handler
 AutoRespawn
 Arrest
 Auto fire rate
-Sit
 Serverhop
 Autogiveguns
 Teamevent
@@ -84,6 +82,7 @@ LoopBring/LoopCrim
 LoopKill
 Commands
 Bring Car
+Command Logger -- Ill look into making the ranked one also have this, which will be added to a file
 
 -- Completed
 Rejoin
@@ -91,9 +90,9 @@ Goto
 Noclip
 Opengate
 View (This also does unview)
-Command Logger (Local Player ONLY) -- Ill look into making the ranked ones also have this, which will be added to a file
 Walk Speed
 Jump Power
+Local Players Functions Logger
 
 GUI
 Main
@@ -189,8 +188,8 @@ local LocalPlayersFunctions = {
   },
   Noclip = {
     Function = function()
-      setting.Noclip = not setting.Noclip;
-      neededFunctions.log.Function("Success", "Noclip has been toggled to " .. tostring(setting.Noclip), "noclip", "LocalPlayer");
+      noclipSettings.noclip = not noclipSettings.noclip;
+      neededFunctions.log.Function("Success", "Noclip has been toggled to " .. tostring(noclipSettings.noclip), "noclip", "LocalPlayer");
     end
   },
   Gate = {
@@ -382,13 +381,18 @@ end)
 
 end
 
---! HeartBeat Connection !--
-runService:Connect(function()
-  if setting.Noclip then
-    for _,Part in pairs(localPlayer.Character:GetDescendants()) do
-      if (Part:IsA("BasePart")) or (Part:IsA("Part")) then
-          Part.CanCollide = false;
+--! Character Appearance Loaded Connection !--
+localPlayer.CharacterAppearanceLoaded:Connect(function(Character)
+  if (noclipSettings.noclip) then
+    for _,Parts : Instance in ipairs(Character:GetDescendants()) do
+      if (Parts:IsA("BasePart")) or (Parts:IsA("Part")) or (Parts:IsA("Accessory")) then
+        Parts.CanCollide = false;
       end
     end
   end
+end)
+
+--! HeartBeat Connection !--
+runService:Connect(function()
+
 end)
