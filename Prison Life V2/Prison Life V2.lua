@@ -61,8 +61,10 @@ local function getPlayers(names: string)
     local _teams = teams:GetTeams()
 
     for name in string.gmatch(names:lower(), "%s?,?%s?([%w_:%s]+)%s?,?%s?") do
+        name = name:gsub(" ", "")
+        
         local prefixPattern = string.format("^(%s)", name)
-        local teamName = string.match(name, "^team:%s?([%w]+)")
+        local teamName = string.match(name, "^team:([%w]+)")
 
         if teamName then
             local teamPattern = string.format("^(%s)", teamName)
@@ -214,16 +216,25 @@ function admin:setRank(player, rank)
     }
 
     self.adminCount = self.adminCount + 1
-
-    self.admins[self.adminCount] = adminInfo
     adminInfo.prefix = self:getPrefix(player)
-    self.admins[self.adminCount] = adminInfo
+    adminInfo.multiCommandPrefix = self:getMultiCommandPrefix(player)
+
+    self.admins[player] = adminInfo
 end
 
 function admin:getPrefix(player)
     local config = getConfig()
     
     return config.prefix[tostring(player.UserId)] or self:getRank(self:getAdmin(player).rank).prefix
+end
+
+function admin:setPrefix(player, prefix)
+    local config = getConfig()
+
+    config.prefix[tostring(player.UserId)] = prefix
+    self.admins[player].prefix = prefix
+
+    setConfig(config)
 end
 
 function admin:getAdmin(player)
@@ -250,36 +261,38 @@ end
 
 function admin.handler(message)
     local player = players:FindFirstChild(message.FromSpeaker)
-    local text = message.Message
 
     local info = admin:getAdmin(player)
     if(info == nil) then return end
 
     local prefix = admin:getPrefix(player)
-    for name, command in next, admin.commands do
-        local cmd = string.format("%s%s", prefix, name)
 
-        if(not text:match("^"..cmd)) then continue end
-        if(command.rank > admin:getRank(info.rank).level) then continue end
+    for _, text in next, string.split(message.Message, "/") do
+        for name, command in next, admin.commands do
+            local cmd = string.format("%s%s", prefix, name)
 
-        local funcInfo = debug.getinfo(command.callback)
-        local args = {}
-        local words = string.split(text, cmd)[1].split(" ")
-        local nparams = funcInfo.nparams - 1
+            if(not text:match("^"..cmd)) then continue end
+            if(command.rank > admin:getRank(info.rank).level) then continue end
 
-        for count, word in next, words do
-            if(count >= nparams) then
-                args[nparams] = (args[nparams] or "") .. word .. " "
-                continue
+            local funcInfo = debug.getinfo(command.callback)
+            local args = {}
+            local words = string.split(text, cmd)[1].split(" ")
+            local nparams = funcInfo.nparams - 1
+
+            for count, word in next, words do
+                if(count >= nparams) then
+                    args[nparams] = (args[nparams] or "") .. word .. " "
+                    continue
+                end
+                args[count] = word
             end
-            args[count] = word
+
+            local lastArg = args[nparams]
+
+            args[nparams] = string.sub(lastArg, 1, #lastArg - 1)
+
+            command.callback(player, table.unpack(args))
         end
-
-        local lastArg = args[nparams]
-
-        args[nparams] = string.sub(lastArg, 1, #lastArg - 1)
-
-        command.callback(player, table.unpack(args))
     end
 end
 
