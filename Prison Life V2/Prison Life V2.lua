@@ -217,7 +217,6 @@ function admin:setRank(player, rank)
 
     self.adminCount = self.adminCount + 1
     adminInfo.prefix = self:getPrefix(player)
-    adminInfo.multiCommandPrefix = self:getMultiCommandPrefix(player)
 
     self.admins[player] = adminInfo
 end
