@@ -14,6 +14,7 @@ assert(not IsJupiterLoaded, "Jupiter is already loaded")
 getgenv().IsJupiterLoaded = true
 
 --! Global Variables !-- 
+local HapticService = game:GetService("HapticService")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local httpService = game:GetService("HttpService")
 local players = game:GetService("Players")
@@ -31,10 +32,16 @@ local noclipSettings = {Noclip = false}
 local doorsTable = {}
 local log = {
     statusPrefixes = {
+        admin = "[Admin]: ",
         error = "[Error]: ",
         success = "[Success]: "
     },
     output = {},
+    saveOutput = function(self)
+        for _, output in next, self.output do
+            output:save()
+        end
+    end,
     print = function(self, status, ...)
         -- Check status
         status = status:lower()
@@ -51,22 +58,42 @@ local log = {
         local message = table.concat(args, " ")
         local unix = os.time()
         local date = os.date("*t", unix)
-        
 
         -- Output message
         print(string.format("%s%s (function=%s, line=%s) [%d:%d:%d %s]", statusPrefix, message, name, log_line, date.hour % 12, date.min, date.sec, date.hour > 12 and "PM" or "AM"))
 
-        -- Add output to the logs
-        table.insert(self.output, {
+        -- Set and add output to the logs
+        local output = {
             name = name,
             status = status,
+            args = args,
             line = log_line,
             date = date,
-            unix = unix
-        })
+            unix = unix,
+            save = function(this)
+                local output = {}
+
+                if isfile("jupiter_output.json") then
+                    output = HttpService:JSONDecode(readfile("jupiter_output.txt"))
+                end
+
+                table.insert(output, {
+                    name = this.name,
+                    status = this.status,
+                    args = this.args,
+                    line = this.line,
+                    unix = this.unix
+                })
+                
+                writefile("jupiter_output.json", HttpService:JSONEncode(output))
+            end
+        }
+
+        table.insert(self.output, output)
+
+        return output
     end
 }
-
 
 for _, Door in next, workspace.Doors:GetChildren() do
     table.insert(doorsTable, Door)
@@ -239,7 +266,7 @@ local admin = {
     adminCount = 0
 }
 
-function admin:setRank(player, rank)
+function admin:setRank(player: Player, rank: string)
     rank = rank:lower()
 
     local adminInfo = {
@@ -251,6 +278,8 @@ function admin:setRank(player, rank)
     adminInfo.prefix = self:getPrefix(player)
 
     self.admins[player] = adminInfo
+
+    log:print("admin", "Set " .. player.Name .. "'s rank to " .. rank .. ".")
 end
 
 function admin:getPrefix(player)
@@ -259,13 +288,15 @@ function admin:getPrefix(player)
     return config.prefix[tostring(player.UserId)] or self:getRank(self:getAdmin(player).rank).prefix
 end
 
-function admin:setPrefix(player, prefix)
+function admin:setPrefix(player: Player, prefix: string)
     local config = getConfig()
 
     config.prefix[tostring(player.UserId)] = prefix
     self.admins[player].prefix = prefix
 
     setConfig(config)
+
+    log:print("admin", "Set " .. player.Name .. "'s prefix to " .. prefix)
 end
 
 function admin:getAdmin(player)
@@ -297,12 +328,11 @@ function admin.handler(message)
     if(info == nil) then return end
 
     local prefix = admin:getPrefix(player)
-
     for _, text in next, string.split(message.Message, "/") do
         for name, command in next, admin.commands do
             local cmd = string.format("%s%s", prefix, name)
 
-            if(not text:match("^"..cmd)) then continue end
+            if(not text:match("^("..cmd..")")) then continue end
             if(command.rank > admin:getRank(info.rank).level) then continue end
 
             local funcInfo = debug.getinfo(command.callback)
@@ -323,6 +353,8 @@ function admin.handler(message)
             args[nparams] = string.sub(lastArg, 1, #lastArg - 1)
 
             command.callback(player, table.unpack(args))
+
+            log:print("admin", player.Name .. " ran " .. command .. " with " .. table.concat(args, ", ") .. " as the arguments.")
         end
     end
 end
