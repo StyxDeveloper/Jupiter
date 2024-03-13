@@ -73,7 +73,7 @@ local log = {
                 local output = {}
 
                 if isfile("jupiter_output.json") then
-                    output = HttpService:JSONDecode(readfile("jupiter_output.txt"))
+                    output = httpService:JSONDecode(readfile("jupiter_output.txt"))
                 end
 
                 table.insert(output, {
@@ -84,7 +84,7 @@ local log = {
                     unix = this.unix
                 })
                 
-                writefile("jupiter_output.json", HttpService:JSONEncode(output))
+                writefile("jupiter_output.json", httpService:JSONEncode(output))
             end
         }
 
