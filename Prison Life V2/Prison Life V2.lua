@@ -28,8 +28,45 @@ local regions = require(replicatedStorage:WaitForChild("Modules_client"):WaitFor
 
 --! Global Tables !--
 local noclipSettings = {Noclip = false}
-local commandLogs = {}
 local doorsTable = {}
+local log = {
+    statusPrefixes = {
+        error = "[Error]: ",
+        success = "[Success]: "
+    },
+    output = {},
+    print = function(self, status, ...)
+        -- Check status
+        status = status:lower()
+        local statusPrefix = self.statusPrefixes[status]
+        assert(statusPrefix ~= nil, "Invalid status: " .. status)
+
+        -- Setup args and function information
+        local args = { ... }
+        local info = debug.getinfo(2)
+
+        -- Get function information and output
+        local name = info.name or table.remove(args, 1)
+        local log_line = info.currentline
+        local message = table.concat(args, " ")
+        local unix = os.time()
+        local date = os.date("*t", unix)
+        
+
+        -- Output message
+        print(string.format("%s%s (function=%s, line=%s) [%d:%d:%d %s]", statusPrefix, message, name, log_line, date.hour % 12, date.min, date.sec, date.hour > 12 and "PM" or "AM"))
+
+        -- Add output to the logs
+        table.insert(self.output, {
+            name = name,
+            status = status,
+            line = log_line,
+            date = date,
+            unix = unix
+        })
+    end
+}
+
 
 for _, Door in next, workspace.Doors:GetChildren() do
     table.insert(doorsTable, Door)
@@ -94,11 +131,6 @@ local function getPlayers(names: string)
     return result
 end
 
-local function log(Code, Text, FuncName, Player)
-    print(Code .. ": " .. Text);
-    table.insert(commandLogs, Code .. " " .. Text .. " " .. FuncName .. " ", Player);
-end
-
 local function isInIllegialRegion(player: Player)
     if player.Character and regions.findRegion(player.Character)["Name"] then
         for _, RegionValue in pairs(replicatedStorage.PermittedRegions:GetChildren()) do
@@ -113,7 +145,7 @@ end
 
 local function rejoin()
     teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId);
-    log("Success", "Rejoining", "rejoin", "LocalPlayer");
+    log:print("Success", "Rejoining");
 end
 
 local function goto(player: Player | string)
@@ -122,22 +154,22 @@ local function goto(player: Player | string)
     end
 
     if not player:IsA("Player") then
-        log("Error", "Player was either not inputted or found, please retry and check names.", "goto", "LocalPlayer");
+        log:print("Error", "Player was either not inputted or found, please retry and check names.");
         return
     end
 
     localPlayer.Character.Head.CFrame = player.Character.Head.CFrame;
-    log("Success", "Successfully went to " .. player.Name .. ".", "goto", "LocalPlayer");
+    log:print("Success", "Successfully went to " .. player.Name .. ".");
 end
 
 local function toggleNoclip()
     noclipSettings.noclip = not noclipSettings.noclip;
-    log("Success", "Noclip has been toggled to " .. tostring(noclipSettings.noclip), "toggleNoclip", "LocalPlayer");
+    log:print("Success", "Noclip has been toggled to " .. tostring(noclipSettings.noclip));
 end
 
 local function invokeGate()
     remote.ItemHandler:InvokeServer(game:GetService("Workspace").Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"]);
-    log("Success", "The Prison Gate has been opened", "invokeGate", "LocalPlayer");
+    log:print("Success", "The Prison Gate has been opened");
 end
 
 local function viewPlayer(player: Player | string | nil)
@@ -149,32 +181,32 @@ local function viewPlayer(player: Player | string | nil)
 
     if not player:IsA("Player") then
         camera.CameraSubject = localPlayer.Character
-        log("Error", "Invalid player was given.", "viewPlayer", "LocalPlayer")
+        log:print("Error", "Invalid player was given.")
         return
     end
 
     camera.CurrentCamera.CameraSubject = player.Character
-    log("Success", "Camera is subject is now " .. player.Name .. ".", "viewPlayer", "LocalPlayer")
+    log:print("Success", "Camera is subject is now " .. player.Name .. ".")
 end
 
 local function setWalkSpeed(speed: any)
     if not type(speed) == "number" then
-        log("Error", "Please enter a valid number", "setWalkspeed", "LocalPlayer");
+        log:print("Error", "Please enter a valid number");
         return
     end
 
     localPlayer.Character:WaitForChild("Humanoid").WalkSpeed = speed;
-    log("Success", "Walkspeed changed to " .. speed, "setWalkSpeed", "LocalPlayer");
+    log:print("Success", "Walkspeed changed to " .. speed);
 end
 
 local function setJumpPower(power: any)
     if not type(power) == "number" then
-        log("Error", "Please enter a valid number", "setJumpPower", "LocalPlayer");
+        log:print("Error", "Please enter a valid number");
         return
     end
 
     localPlayer.Character:WaitForChild("Humanoid").JumpPower = power;
-    log("Success", "JumpPower changed to " .. power, "setJumpPower", "LocalPlayer");
+    log:print("Success", "JumpPower changed to " .. power);
 end
 
 -- ! Ranked Commands ! --
