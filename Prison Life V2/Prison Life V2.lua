@@ -14,7 +14,6 @@ assert(not IsJupiterLoaded, "Jupiter is already loaded")
 getgenv().IsJupiterLoaded = true
 
 --! Global Variables !-- 
-local HapticService = game:GetService("HapticService")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local httpService = game:GetService("HttpService")
 local players = game:GetService("Players")
