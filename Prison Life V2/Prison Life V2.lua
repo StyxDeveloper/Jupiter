@@ -10,49 +10,6 @@
 --! Checks !--
 game.Loaded:Wait()
 
-        -- Get function information and output
-        local name = info.name or table.remove(args, 1)
-        local log_line = info.currentline
-        local message = table.concat(args, " ")
-        local unix = os.time()
-        local date = os.date("*t", unix)
-
-        -- Output message
-        print(string.format("%s%s (function=%s, line=%s) [%d:%d:%d %s]", statusPrefix, message, name, log_line, date.hour % 12, date.min, date.sec, date.hour > 12 and "PM" or "AM"))
-
-        -- Set and add output to the logs
-        local output = {
-            name = name,
-            status = status,
-            args = args,
-            line = log_line,
-            date = date,
-            unix = unix,
-            save = function(this)
-                local output = {}
-
-                if isfile("jupiter_output.json") then
-                    output = httpService:JSONDecode(readfile("jupiter_output.txt"))
-                end
-
-                table.insert(output, {
-                    name = this.name,
-                    status = this.status,
-                    args = this.args,
-                    line = this.line,
-                    unix = this.unix
-                })
-                
-                writefile("jupiter_output.json", httpService:JSONEncode(output))
-            end
-        }
-
-        table.insert(self.output, output)
-
-        return output
-    end
-}
-
 --! Global Variables !-- 
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local httpService = game:GetService("HttpService")
