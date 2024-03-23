@@ -10,47 +10,6 @@
 --! Checks !--
 game.Loaded:Wait()
 
-assert(not IsJupiterLoaded, "Jupiter is already loaded")
-getgenv().IsJupiterLoaded = true
-
---! Global Variables !-- 
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local httpService = game:GetService("HttpService")
-local players = game:GetService("Players")
-local teleportService = game:GetService("TeleportService")
-local runService = game:GetService("RunService")
-local teams = game:GetService("Teams")
-
-local localPlayer = players.LocalPlayer
-local remote = workspace:WaitForChild("Remote")
-local messageDoneFiltering = replicatedStorage:WaitForChild("OnMessageDoneFiltering")
-local regions = require(replicatedStorage:WaitForChild("Modules_client"):WaitForChild("RegionModule_client"))
-
---! Global Tables !--
-local noclipSettings = {Noclip = false}
-local doorsTable = {}
-local log = {
-    statusPrefixes = {
-        admin = "[Admin]: ",
-        error = "[Error]: ",
-        success = "[Success]: "
-    },
-    output = {},
-    saveOutput = function(self)
-        for _, output in next, self.output do
-            output:save()
-        end
-    end,
-    print = function(self, status, ...)
-        -- Check status
-        status = status:lower()
-        local statusPrefix = self.statusPrefixes[status]
-        assert(statusPrefix ~= nil, "Invalid status: " .. status)
-
-        -- Setup args and function information
-        local args = { ... }
-        local info = debug.getinfo(2)
-
         -- Get function information and output
         local name = info.name or table.remove(args, 1)
         local log_line = info.currentline
@@ -94,8 +53,79 @@ local log = {
     end
 }
 
-for _, Door in next, workspace.Doors:GetChildren() do
-    table.insert(doorsTable, Door)
+--! Global Variables !-- 
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local httpService = game:GetService("HttpService")
+local players = game:GetService("Players")
+local teams = game:GetService("Teams")
+
+local localPlayer = players.LocalPlayer
+local remote = workspace:WaitForChild("Remote")
+local messageDoneFiltering = replicatedStorage:WaitForChild("OnMessageDoneFiltering")
+local regions = require(replicatedStorage:WaitForChild("Modules_client"):WaitForChild("RegionModule_client"))
+
+--! Global Tables !--
+local noclipSettings = {Noclip = false}
+local doorsTable = {}
+local log = {
+    statusPrefixes = {
+        admin = "[Admin]: ",
+        error = "[Error]: ",
+        success = "[Success]: "
+    },
+    output = {},
+    saveOutput = function(self)
+        for _, output in ipairs(self.output) do
+            output:save()
+        end
+    end,
+    print = function(self, status, ...)
+        status = status:lower()
+        local statusPrefix = self.statusPrefixes[status]
+        assert(statusPrefix, "Invalid status: " .. status)
+
+        local args = { ... }
+        local info = debug.getinfo(2)
+        local name = info.name or table.remove(args, 1)
+        local log_line = info.currentline
+        local message = table.concat(args, " ")
+        local unix = os.time()
+        local date = os.date("*t", unix)
+
+        -- Output message
+        print(string.format("%s%s (function=%s, line=%s) [%d:%d:%d %s]", statusPrefix, message, name, log_line, date.hour % 12, date.min, date.sec, date.hour > 12 and "PM" or "AM"))
+
+        local output = {
+            name = name,
+            status = status,
+            args = args,
+            line = log_line,
+            date = date,
+            unix = unix,
+            save = function()
+                local output = {}
+
+                if isfile("jupiter_output.json") then
+                    output = httpService:JSONDecode(readfile("jupiter_output.txt"))
+                end
+
+                table.insert(output, {
+                    name = name,
+                    status = status,
+                    args = args,
+                    line = log_line,
+                    unix = unix
+                })
+                writefile("jupiter_output.json", httpService:JSONEncode(output))
+            end
+        }
+        table.insert(self.output, output)
+        return output
+    end
+}
+
+for _, door in ipairs(workspace.Doors:GetChildren()) do
+    table.insert(doorsTable, door);
 end
 
 --! Functions !--
@@ -104,7 +134,6 @@ local function getConfig()
     if not isfile("admin.jupiter") then
         writefile("admin.jupiter", '{"prefix": {}, "admins": {}}')
     end
-    
     return httpService:JSONDecode(readfile("admin.jupiter"))
 end
 
@@ -113,48 +142,40 @@ local function setConfig(config: table)
 end
 
 local function getPlayers(names: string)
-    local result: { Player } = {}
+    local result = {};
 
     local function addPlayer(player)
-        if table.find(result, player) then return end
-        return table.insert(result, player)
+        if not table.find(result, player) then
+            table.insert(result, player);
+        end
     end
 
-    local _players = players:GetPlayers()
-    local _teams = teams:GetTeams()
+    for name in names:gmatch("%s?,?%s?([%w_:%s]+)%s?,?%s?") do
+        name = name:gsub(" ", "");
 
-    for name in string.gmatch(names:lower(), "%s?,?%s?([%w_:%s]+)%s?,?%s?") do
-        name = name:gsub(" ", "")
-        
-        local prefixPattern = string.format("^(%s)", name)
-        local teamName = string.match(name, "^team:([%w]+)")
+        local prefixPattern = "^" .. name;
+        local teamName = name:match("^team:([%w]+)");
 
         if teamName then
-            local teamPattern = string.format("^(%s)", teamName)
+            local teamPattern = "^" .. teamName;
 
-            for _, team in next, _teams do
-                if not string.match(team.Name:lower(), teamPattern) then
-                    continue
-                end
-
-                for _, plr in next,  team:GetPlayers() do
-                    addPlayer(plr)
+            for _, team in ipairs(teams:GetTeams()) do
+                if team.Name:lower():match(teamPattern) then
+                    for _, plr in ipairs(team:GetPlayers()) do
+                        addPlayer(plr);
+                    end
                 end
             end
-
-            continue
-        end
-
-        for _, plr in next, _players do
-            if not (string.match(plr.Name:lower(), prefixPattern) or string.match(plr.DisplayName:lower(), prefixPattern)) then
-                continue
+        else
+            for _, plr in ipairs(players:GetPlayers()) do
+                if plr.Name:lower():match(prefixPattern) or plr.DisplayName:lower():match(prefixPattern) then
+                    addPlayer(plr);
+                end
             end
-
-            addPlayer(plr)
         end
     end
 
-    return result
+    return result;
 end
 
 local function isInIllegialRegion(player: Player)
@@ -169,72 +190,6 @@ local function isInIllegialRegion(player: Player)
     return true;
 end
 
-local function rejoin()
-    teleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId);
-    log:print("Success", "Rejoining");
-end
-
-local function goto(player: Player | string)
-    if type(player) == "string" then
-        player = getPlayers(player)[1]
-    end
-
-    if not player:IsA("Player") then
-        log:print("Error", "Player was either not inputted or found, please retry and check names.");
-        return
-    end
-
-    localPlayer.Character.Head.CFrame = player.Character.Head.CFrame;
-    log:print("Success", "Successfully went to " .. player.Name .. ".");
-end
-
-local function toggleNoclip()
-    noclipSettings.noclip = not noclipSettings.noclip;
-    log:print("Success", "Noclip has been toggled to " .. tostring(noclipSettings.noclip));
-end
-
-local function invokeGate()
-    remote.ItemHandler:InvokeServer(game:GetService("Workspace").Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"]);
-    log:print("Success", "The Prison Gate has been opened");
-end
-
-local function viewPlayer(player: Player | string | nil)
-    local camera = game:GetService("Workspace"):WaitForChild("CurrentCamera")
-
-    if type(player) == "string" then
-        player = getPlayers(player)[1]
-    end
-
-    if not player:IsA("Player") then
-        camera.CameraSubject = localPlayer.Character
-        log:print("Error", "Invalid player was given.")
-        return
-    end
-
-    camera.CurrentCamera.CameraSubject = player.Character
-    log:print("Success", "Camera is subject is now " .. player.Name .. ".")
-end
-
-local function setWalkSpeed(speed: any)
-    if not type(speed) == "number" then
-        log:print("Error", "Please enter a valid number");
-        return
-    end
-
-    localPlayer.Character:WaitForChild("Humanoid").WalkSpeed = speed;
-    log:print("Success", "Walkspeed changed to " .. speed);
-end
-
-local function setJumpPower(power: any)
-    if not type(power) == "number" then
-        log:print("Error", "Please enter a valid number");
-        return
-    end
-
-    localPlayer.Character:WaitForChild("Humanoid").JumpPower = power;
-    log:print("Success", "JumpPower changed to " .. power);
-end
-
 -- ! Ranked Commands ! --
 
 local admin = {
@@ -242,12 +197,12 @@ local admin = {
         owner = {
             name = "Owner",
             prefix = ";",
-            level = math.huge
+            level = 100
         },
         mod = {
             name = "Moderator",
             prefix = ";",
-            level = 100
+            level = 50
         },
         friend = {
             name = "Friend",
@@ -360,15 +315,93 @@ end
 
 messageDoneFiltering.OnClientEvent:Connect(admin.handler)
 
-admin:createCommand("test", {
-    level = math.huge, -- Owner rank
-    description = "This is just for showing you guys how to use this function.",
-}, function(player, arg1, arg2)
-    print("This is who chatted ", player.Name)
-    print("This is the first argument ", arg1)
-    print("This is second argument will be pack every other arg after it ", arg2)
+admin:createCommand("walkspeed" or "ws", {
+    level = 100,
+    description = "Set your walkspeed.",},
+    function(Integer : IntValue)
+    if not type(Integer) == "number" then
+        log:print("Error", "Please enter a valid number");
+        return;
+    end
+    localPlayer.Character:WaitForChild("Humanoid").WalkSpeed = Integer;
+    log:print("Success", "Walkspeed changed to " .. Integer);
 end)
 
+admin:createCommand("jumppower" or "jp", {
+    level = 100,
+    description = "Set your jumppower",},
+    function(Integer : IntValue)
+    if not type(Integer) == "number" then
+        log:print("Error", "Please enter a valid number");
+        return;
+    end
+    localPlayer.Character:WaitForChild("Humanoid").JumpPower = Integer;
+    log:print("Success", "JumpPower changed to " .. Integer);
+end)
+
+admin:createCommand("noclip" or "nc", {
+    level = 100,
+    description = "Noclip, walk through walls.",},
+    function()
+    noclipSettings.noclip = not noclipSettings.noclip;
+    log:print("Success", "Noclip has been toggled to " .. tostring(noclipSettings.noclip));
+end)
+
+admin:createCommand("rejoin" or "rj", {
+    level = 100,
+    description = "Rejoin this server.",},
+    function()
+    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId);
+    log:print("Success", "Rejoining");
+end)
+
+admin:createCommand("opengate", {
+    level = 25,
+    description = "Opens main gate for the prison.",},
+    function()
+    remote.ItemHandler:InvokeServer(game:GetService("Workspace").Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"]);
+    log:print("Success", "The Prison Gate has been opened");
+end)
+
+admin:createCommand("goto" or "to", {
+    level = 100,
+    description = "Teleport to a player.",},
+    function(player: Player | string)
+    if type(player) == "string" then
+        player = getPlayers(player)[1]
+    end
+    if not player:IsA("Player") then
+        log:print("Error", "Player was either not inputted or found, please retry and check names.");
+        return;
+    end
+    localPlayer.Character.Head.CFrame = player.Character.Head.CFrame;
+    log:print("Success", "Successfully went to " .. player.Name .. ".");
+end)
+
+admin:createCommand("view", {
+    level = 100,
+    description = "View a player.",},
+    function(player: Player | string | nil)
+    if type(player) == "string" then
+        player = getPlayers(player)[1];
+    end
+    if not player:IsA("Player") then
+        game:GetService("Workspace"):WaitForChild("CurrentCamera").CameraSubject = localPlayer.Character;
+        log:print("Error", "Invalid player was given.");
+        return;
+    end
+    game:GetService("Workspace"):WaitForChild("CurrentCamera").CurrentCamera.CameraSubject = player.Character;
+    log:print("Success", "Camera is subject is now " .. player.Name .. ".");
+end)
+
+--[[
+admin:createCommand("", {
+    level = 100,
+    description = "",},
+    function()
+        
+end)
+]]
 
 --! Character Appearance Loaded Connection !--
 localPlayer.CharacterAppearanceLoaded:Connect(function(Character)
@@ -379,11 +412,6 @@ localPlayer.CharacterAppearanceLoaded:Connect(function(Character)
       end
     end
   end
-end)
-
---! HeartBeat Connection !--
-runService:Connect(function()
-
 end)
 
 --! TODO !--
