@@ -3,8 +3,8 @@
     Status: In Progress, V2
     Developer: Styx
     Contributors:
-    - Lolegic
     - Chonker
+    - Lolegic
 ]]
 
 --! Checks !--
@@ -15,6 +15,7 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 local httpService = game:GetService("HttpService")
 local players = game:GetService("Players")
 local teams = game:GetService("Teams")
+local workSpace = game:GetService("Workspace")
 
 local localPlayer = players.LocalPlayer
 local remote = workspace:WaitForChild("Remote")
@@ -24,6 +25,7 @@ local regions = require(replicatedStorage:WaitForChild("Modules_client"):WaitFor
 --! Global Tables !--
 local noclipSettings = {Noclip = false}
 local doorsTable = {}
+local killSettings = {loopkill = false, settings = {killMethod = "Melee"}}
 local log = {
     statusPrefixes = {
         admin = "[Admin]: ",
@@ -143,8 +145,111 @@ local function isInIllegialRegion(player: Player)
             end
         end
     end
-
     return true;
+end
+
+local function teamEvent(team: string | nil, unwantedTeam: string | nil)
+    local originalCFrame = nil
+    if localPlayer.Character:FindFirstChild("Head") then
+        originalCFrame = localPlayer.Character.Head.CFrame;
+    else
+        originalCFrame = localPlayer.Character:FindFirstChildWhichIsA("Part") or localPlayer.Character:FindFirstChildWhichIsA("BasePart");
+    end
+
+    local teamsAndFunc = {
+        inmates = function()
+            remote.TeamEvent:FireServer("Bright orange");
+            task.wait(1);
+            localPlayer.Character:PivotTo(originalCFrame);
+        end,
+        criminals = function()
+        local CrimPads = workSpace["Criminals Spawn"]:FindFirstChild("SpawnLocation");
+            localPlayer.Character:PivotTo(CrimPads.CFrame);
+            task.wait(0.2);
+            localPlayer.Character:PivotTo(originalCFrame);
+        end,
+        guards = function()
+            while #game.Teams.Guards:GetPlayers() == 8 do
+                task.wait(1);
+            end;
+            remote.TeamEvent:FireServer("Bright blue");
+            task.wait(1);
+            localPlayer.Character:PivotTo(originalCFrame);
+        end,
+        neutral = function()
+            remote.TeamEvent:FireServer("Medium stone grey");
+            task.wait(1);
+            localPlayer.Character:PivotTo(originalCFrame);
+        end
+    }
+    for name, func in pairs(teamsAndFunc) do
+        if type(team) == "string" and name == team then
+            func();
+            log:print("Success", "Team changed to " .. team);
+            break;
+        elseif type(team) == "nil" and type(unwantedTeam) == "string" and name ~= unwantedTeam then
+            func();
+            log:print("Success", "Swapped to team: " .. name);
+            break;
+        end
+        log:print("Error", "Invalid team: " .. tostring(team));
+    end
+end
+
+local function itemHandler(tool)
+    local tools = {m4a1 = workSpace.Prison_ITEMS.giver.M4A1, shotgun = workSpace.Prison_ITEMS.giver["Remington 870"], ak = workSpace.Prison_ITEMS.giver["AK-47"], m9 = workSpace.Prison_ITEMS.giver["M9"], hammer = workSpace.Prison_ITEMS.single.Hammer}
+    repeat task.wait(0.03) until localPlayer.Character.Humanoid.Health >= 1 and localPlayer.Character
+
+    for name, item in pairs(tools) do
+        if name == tool then
+            task.wait(0.2);
+            remote.ItemHandler:InvokeServer({Position = localPlayer.Character.PrimaryPart.CFrame.Position, Parent = item});
+            break;
+        end
+    end
+    log:print("Success", "Got Tool: " .. tool);
+end
+
+local function killPlayer(Player : Player | string)
+    if killSettings.settings.killMethod == "Melee" then
+        local pivotPoint = localPlayer.Character:GetPivot();
+        localPlayer.Character:PivotTo(Player.Character:GetPivot());
+        task.wait(0.4);
+        for i = 1, 20 do
+            replicatedStorage.meleeEvent:FireServer(players:FindFirstChild(Player));
+            if Player.Character.Humanoid.Health == 0 then
+                break;
+            end
+        end
+        localPlayer.Character:PivotTo(pivotPoint);
+        log:print("Success", "Melee killed player: " .. Player);
+    elseif killSettings.settings.killMethod == "Gun" then
+        local info = {didChangeTeamColor = nil, oldTeamColor = nil};
+
+        if localPlayer.TeamColor == Player.TeamColor then
+            info.didChangeTeamColor = true;
+            info.oldTeamColor = localPlayer.Team.Name;
+
+            teamEvent(nil, Player.Team.Name);
+        end
+
+        for i = 1, 6 do
+            if not localPlayer.Backpack:FindFirstChild("M9") or not localPlayer.Character:FindFirstChild("M9") then
+                itemHandler("m9");
+            end
+            if not localPlayer.Character:FindFirstChild("M9") then
+                localPlayer.Backpack:FindFirstChild("M9").Parent = localPlayer.Character;
+            end
+            if Player.Character.Humanoid.Health == 0 then
+                break;
+            end
+
+            replicatedStorage:FindFirstChild("ShootEvent"):FireServer({{RayObject = Ray.new(Vector3.new(0)), Distance = 1, Cframe = CFrame.new(0, 0, 0), Hit = Player.Character:FindFirstChild("Head")}}, localPlayer.Character:FindFirstChild("M9"));
+            localPlayer.Character:FindFirstChild("M9"):Destroy();
+            log:print("Success", "Gun killed player: " .. Player);
+        end
+        teamEvent(info.oldTeamColor);
+    end
 end
 
 -- ! Ranked Commands ! --
@@ -316,7 +421,7 @@ admin:createCommand("opengate", {
     level = 25,
     description = "Opens main gate for the prison.",},
     function()
-    remote.ItemHandler:InvokeServer(game:GetService("Workspace").Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"]);
+    remote.ItemHandler:InvokeServer(workSpace.Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"]);
     log:print("Success", "The Prison Gate has been opened");
 end)
 
@@ -331,7 +436,7 @@ admin:createCommand("goto" or "to", {
         log:print("Error", "Player was either not inputted or found, please retry and check names.");
         return;
     end
-    localPlayer.Character.Head.CFrame = player.Character.Head.CFrame;
+    localPlayer.Character:PivotTo(player.Character.Head.CFrame);
     log:print("Success", "Successfully went to " .. player.Name .. ".");
 end)
 
@@ -343,13 +448,63 @@ admin:createCommand("view", {
         player = getPlayers(player)[1];
     end
     if not player:IsA("Player") then
-        game:GetService("Workspace"):WaitForChild("CurrentCamera").CameraSubject = localPlayer.Character;
+        workSpace:WaitForChild("CurrentCamera").CameraSubject = localPlayer.Character;
         log:print("Error", "Invalid player was given.");
         return;
     end
-    game:GetService("Workspace"):WaitForChild("CurrentCamera").CurrentCamera.CameraSubject = player.Character;
+    workSpace:WaitForChild("CurrentCamera").CurrentCamera.CameraSubject = player.Character;
     log:print("Success", "Camera is subject is now " .. player.Name .. ".");
 end)
+
+admin:createCommand("kill", {
+    level = 25,
+    description = "Kill a player",},
+    function(Player: Player | string | nil)
+    if Player == nil then
+        log:print("Error", "Invalid player given try again.");
+    elseif getPlayers(Player) then
+        killPlayer(getPlayers(Player));
+        log:print("Success", "Killed " .. tostring(getPlayers(Player)));
+    end
+end)
+
+admin:createCommand("killmethod", {
+    level = 100,
+    description = "Choice between using gun kill (gun) or melee kill (melee).",},
+    function(KillMethod: string)
+    if KillMethod == "melee" or "gun" then
+        killSettings.settings.killMethod = KillMethod;
+    end
+end)
+
+admin:createCommand("teamevent", {
+    level = 100,
+    description = "Change teams inmates i, criminals or c, guards or g, neutral or n.",},
+    function(input: string)
+    if input == "inmate" or input == "i" or input == "inmates" then
+        teamEvent("inmates");
+        log:print("success", "Switched teams to " .. input);
+    elseif input == "criminal" or input == "c" or input == "criminals" then
+        teamEvent("criminals");
+        log:print("success", "Switched teams to " .. input);
+    elseif input == "guard" or input == "g" or input == "guards" then
+        teamEvent("guards");
+        log:print("success", "Switched teams to " .. input);
+    elseif input == "neutral" or input == "n" then
+        teamEvent("neutral");
+        log:print("success", "Switched teams to " .. input);
+    else
+        log:print("Error", "Invalid team: " .. tostring(input));
+    end
+end)
+
+admin:createCommand("shotgun", {
+    level = 100,
+    description = "Gives you a shotgun",},
+    function()
+        
+end)
+
 
 --[[
 admin:createCommand("", {
@@ -379,18 +534,16 @@ Functions
 
 Make firetouchinterest as some executors don't contain this
 
-Kill player (both melee event and gun event)
 Item Handler
-AutoRespawn
+AutoRespawn - And Ranked version
 Arrest
 Auto fire rate
 Serverhop
 Autogiveguns
-Teamevent
-Exclude
 Fps boost -- Remove bullets also
 Open doors
 No doors
+No Walls
 Kill aura
 Door aura
 Antibring
@@ -398,19 +551,26 @@ Anticrim
 Copyteam
 Loopkill
 AntiTase
-FF
 Tase
 Respawn
 Chatlogger
-Command logger
 Admin player command handler
-Bring
+Bring -- Delay option - destroys toliets as method
 Criminal Player
 LoopBring/LoopCrim
 LoopKill
-Commands
+Commands -- Local Player and Ranked
 Bring Car
-Command Logger -- Ill look into making the ranked one also have this, which will be added to a file
+Command Logger -- Ill look into making the ranked one also have this, which will be added to a table
+Crash
+Lag
+
+-- Admin
+Admin Settings -- Will include single and all admins - killcmds/tpcmds/arrestcmds/selection
+rank -- Everyone - single
+unrank - Everyone - single
+GetRankedSettings -- Prints individual settings will follow format like so (PlayerName - Settings) Will do a GUI
+Exclude -- Player cant be touched by ranked individuals
 
 -- Completed
 Rejoin
@@ -421,6 +581,9 @@ View (This also does unview)
 Walk Speed
 Jump Power
 Local Players Functions Logger
+Kill player (both melee event and gun event)
+Teamevent
+
 
 GUI
 Main
@@ -431,9 +594,4 @@ Skid Check -- With Options
 Output
 chatlogs
 Sections (Antis, Abusive, Misc).
-
-Command Handler
-Main
-Ranked system
-Handles Chat Logger also
 ]]
