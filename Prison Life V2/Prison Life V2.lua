@@ -502,9 +502,58 @@ admin:createCommand("shotgun", {
     level = 100,
     description = "Gives you a shotgun",},
     function()
-        
+    itemHandler("shotgun");
+    log:print("Success", "gave gun.");
 end)
 
+admin:createCommand("m9", {
+    level = 100,
+    description = "Gives you M9",},
+    function()
+    itemHandler("m9");
+    log:print("Success", "gave gun.");
+end)
+
+admin:createCommand("ak", {
+    level = 100,
+    description = "Gives you Ak47",},
+    function()
+    itemHandler("ak47");
+    log:print("Success", "gave gun.");
+end)
+
+admin:createCommand("m4a1", {
+    level = 100,
+    description = "Gives you M4A1",},
+    function()
+    if game:GetService("MarketplaceService"):UserOwnsGamePassAsync(localPlayer.UserId, 96651) then
+        itemHandler("m4a1");
+        log:print("Success", "gave gun.");
+    else
+        log:print("Error", "Cant obtain M4A1 as it requires gamepass.");
+    end
+end)
+
+admin:createCommand("hammer", {
+    level = 100,
+    description = "Gives hammer.",},
+    function()
+    itemHandler("hammer")
+    log:print("Success", "gave hammer.");
+end)
+
+admin:createCommand("guns", {
+    level = 100,
+    description = "Gives all guns",},
+    function()
+    itemHandler("m9");
+    itemHandler("shotgun");
+    itemHandler("ak47");
+    if game:GetService("MarketplaceService"):UserOwnsGamePassAsync(localPlayer.UserId, 96651) then
+        itemHandler("m4a1");
+    end
+    log:print("Success", "Given all guns");
+end)
 
 --[[
 admin:createCommand("", {
