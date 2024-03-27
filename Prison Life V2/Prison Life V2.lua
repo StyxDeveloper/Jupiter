@@ -380,7 +380,7 @@ messageDoneFiltering.OnClientEvent:Connect(admin.handler)
 admin:createCommand("walkspeed" or "ws", {
     level = 100,
     description = "Set your walkspeed.",},
-    function(Integer : IntValue)
+    function(player, Integer : IntValue)
     if not type(Integer) == "number" then
         log:print("Error", "Please enter a valid number");
         return;
@@ -392,7 +392,7 @@ end)
 admin:createCommand("jumppower" or "jp", {
     level = 100,
     description = "Set your jumppower",},
-    function(Integer : IntValue)
+    function(player, Integer : IntValue)
     if not type(Integer) == "number" then
         log:print("Error", "Please enter a valid number");
         return;
@@ -404,7 +404,7 @@ end)
 admin:createCommand("noclip" or "nc", {
     level = 100,
     description = "Noclip, walk through walls.",},
-    function()
+    function(player, )
     noclipSettings.noclip = not noclipSettings.noclip;
     log:print("Success", "Noclip has been toggled to " .. tostring(noclipSettings.noclip));
 end)
@@ -412,7 +412,7 @@ end)
 admin:createCommand("rejoin" or "rj", {
     level = 100,
     description = "Rejoin this server.",},
-    function()
+    function(player, )
     game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId);
     log:print("Success", "Rejoining");
 end)
@@ -420,7 +420,7 @@ end)
 admin:createCommand("opengate", {
     level = 25,
     description = "Opens main gate for the prison.",},
-    function()
+    function(player, )
     remote.ItemHandler:InvokeServer(workSpace.Prison_ITEMS.buttons["Prison Gate"]["Prison Gate"]);
     log:print("Success", "The Prison Gate has been opened");
 end)
@@ -428,7 +428,7 @@ end)
 admin:createCommand("goto" or "to", {
     level = 100,
     description = "Teleport to a player.",},
-    function(player: Player | string)
+    function(player, player: Player | string)
     if type(player) == "string" then
         player = getPlayers(player)[1]
     end
@@ -443,7 +443,7 @@ end)
 admin:createCommand("view", {
     level = 100,
     description = "View a player.",},
-    function(player: Player | string | nil)
+    function(player, player: Player | string | nil)
     if type(player) == "string" then
         player = getPlayers(player)[1];
     end
@@ -459,7 +459,7 @@ end)
 admin:createCommand("kill", {
     level = 25,
     description = "Kill a player",},
-    function(Player: Player | string | nil)
+    function(player, Player: Player | string | nil)
     if Player == nil then
         log:print("Error", "Invalid player given try again.");
     elseif getPlayers(Player) then
@@ -471,7 +471,7 @@ end)
 admin:createCommand("killmethod", {
     level = 100,
     description = "Choice between using gun kill (gun) or melee kill (melee).",},
-    function(KillMethod: string)
+    function(player, KillMethod: string)
     if KillMethod == "melee" or "gun" then
         killSettings.settings.killMethod = KillMethod;
     end
@@ -480,7 +480,7 @@ end)
 admin:createCommand("teamevent", {
     level = 100,
     description = "Change teams inmates i, criminals or c, guards or g, neutral or n.",},
-    function(input: string)
+    function(player, input: string)
     if input == "inmate" or input == "i" or input == "inmates" then
         teamEvent("inmates");
         log:print("success", "Switched teams to " .. input);
@@ -555,6 +555,8 @@ admin:createCommand("guns", {
     log:print("Success", "Given all guns");
 end)
 
+
+
 --[[
 admin:createCommand("", {
     level = 100,
@@ -583,7 +585,6 @@ Functions
 
 Make firetouchinterest as some executors don't contain this
 
-Item Handler
 AutoRespawn - And Ranked version
 Arrest
 Auto fire rate
@@ -632,7 +633,6 @@ Jump Power
 Local Players Functions Logger
 Kill player (both melee event and gun event)
 Teamevent
-
 
 GUI
 Main
